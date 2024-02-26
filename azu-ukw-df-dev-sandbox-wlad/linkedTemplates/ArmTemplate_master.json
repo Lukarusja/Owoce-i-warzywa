@@ -1,0 +1,223 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "azu-ukw-df-dev-sandbox-wlad"
+		},
+		"ls_csdb_dev_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_csdb_dev_wlad'"
+		},
+		"ls_file_dev_split_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_file_dev_split_wlad'",
+			"defaultValue": "DefaultEndpointsProtocol=https;AccountName=@{linkedService().StorageAccountName};EndpointSuffix=core.windows.net;"
+		},
+		"ls_file_dev_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_file_dev_wlad'"
+		},
+		"ls_sf_dev_split_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sf_dev_split_wlad'",
+			"defaultValue": "jdbc:snowflake://@{linkedService().AccountName}.snowflakecomputing.com/?user=@{linkedService().Username}&db=@{linkedService().Database}&warehouse=@{linkedService().Warehouse}&role=@{linkedService().Role}"
+		},
+		"ls_sf_dev_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sf_dev_wlad'"
+		},
+		"ls_sftp_dev_split_wlad_passPhrase": {
+			"type": "secureString",
+			"metadata": "Secure string for 'passPhrase' of 'ls_sftp_dev_split_wlad'"
+		},
+		"ls_sftp_dev_wlad_privateKeyContent": {
+			"type": "secureString",
+			"metadata": "Secure string for 'privateKeyContent' of 'ls_sftp_dev_wlad'"
+		},
+		"ls_sftp_dev_wlad_passPhrase": {
+			"type": "secureString",
+			"metadata": "Secure string for 'passPhrase' of 'ls_sftp_dev_wlad'"
+		},
+		"ls_sqls_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sqls_wlad'"
+		},
+		"kv_dev_wlad_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://azu-ukw-kv-dev-wlad.vault.azure.net/"
+		},
+		"ls_blob_dev_split_wlad_properties_typeProperties_sasUri_secretName": {
+			"type": "string",
+			"defaultValue": "@linkedService().KVSasUrl"
+		},
+		"ls_blob_dev_wlad_sasUri": {
+			"type": "secureString",
+			"metadata": "Secure string for 'sasUri' of 'ls_blob_dev_wlad'"
+		},
+		"ls_sftp_dev_split_wlad_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "@{linkedService().Hostname}"
+		},
+		"ls_sftp_dev_split_wlad_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().Username}"
+		},
+		"ls_sftp_dev_wlad_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "sftp.zynchub4.co.uk"
+		},
+		"ls_sftp_dev_wlad_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().Username}"
+		},
+		"ls_table_dev_wlad_sasUri": {
+			"type": "secureString",
+			"metadata": "Secure string for 'sasUri' of 'ls_table_dev_wlad'"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "azu-ukw-df-dev-sandbox-wlad_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"ls_csdb_dev_wlad_connectionString": {
+						"value": "[parameters('ls_csdb_dev_wlad_connectionString')]"
+					},
+					"ls_file_dev_wlad_connectionString": {
+						"value": "[parameters('ls_file_dev_wlad_connectionString')]"
+					},
+					"ls_sf_dev_wlad_connectionString": {
+						"value": "[parameters('ls_sf_dev_wlad_connectionString')]"
+					},
+					"ls_sftp_dev_wlad_privateKeyContent": {
+						"value": "[parameters('ls_sftp_dev_wlad_privateKeyContent')]"
+					},
+					"ls_sftp_dev_wlad_passPhrase": {
+						"value": "[parameters('ls_sftp_dev_wlad_passPhrase')]"
+					},
+					"ls_sqls_wlad_connectionString": {
+						"value": "[parameters('ls_sqls_wlad_connectionString')]"
+					},
+					"kv_dev_wlad_properties_typeProperties_baseUrl": {
+						"value": "[parameters('kv_dev_wlad_properties_typeProperties_baseUrl')]"
+					},
+					"ls_blob_dev_wlad_sasUri": {
+						"value": "[parameters('ls_blob_dev_wlad_sasUri')]"
+					},
+					"ls_sftp_dev_wlad_properties_typeProperties_host": {
+						"value": "[parameters('ls_sftp_dev_wlad_properties_typeProperties_host')]"
+					},
+					"ls_sftp_dev_wlad_properties_typeProperties_userName": {
+						"value": "[parameters('ls_sftp_dev_wlad_properties_typeProperties_userName')]"
+					},
+					"ls_table_dev_wlad_sasUri": {
+						"value": "[parameters('ls_table_dev_wlad_sasUri')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "azu-ukw-df-dev-sandbox-wlad_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"ls_file_dev_split_wlad_connectionString": {
+						"value": "[parameters('ls_file_dev_split_wlad_connectionString')]"
+					},
+					"ls_sf_dev_split_wlad_connectionString": {
+						"value": "[parameters('ls_sf_dev_split_wlad_connectionString')]"
+					},
+					"ls_sftp_dev_split_wlad_passPhrase": {
+						"value": "[parameters('ls_sftp_dev_split_wlad_passPhrase')]"
+					},
+					"ls_blob_dev_split_wlad_properties_typeProperties_sasUri_secretName": {
+						"value": "[parameters('ls_blob_dev_split_wlad_properties_typeProperties_sasUri_secretName')]"
+					},
+					"ls_sftp_dev_split_wlad_properties_typeProperties_host": {
+						"value": "[parameters('ls_sftp_dev_split_wlad_properties_typeProperties_host')]"
+					},
+					"ls_sftp_dev_split_wlad_properties_typeProperties_userName": {
+						"value": "[parameters('ls_sftp_dev_split_wlad_properties_typeProperties_userName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'azu-ukw-df-dev-sandbox-wlad_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "azu-ukw-df-dev-sandbox-wlad_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'azu-ukw-df-dev-sandbox-wlad_ArmTemplate_1')]"
+			]
+		},
+		{
+			"name": "azu-ukw-df-dev-sandbox-wlad_ArmTemplate_3",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_3.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'azu-ukw-df-dev-sandbox-wlad_ArmTemplate_2')]"
+			]
+		}
+	]
+}

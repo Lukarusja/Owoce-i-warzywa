@@ -1,0 +1,3650 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "azu-ukw-df-dev-sandbox-wlad"
+		},
+		"ls_file_dev_split_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_file_dev_split_wlad'",
+			"defaultValue": "DefaultEndpointsProtocol=https;AccountName=@{linkedService().StorageAccountName};EndpointSuffix=core.windows.net;"
+		},
+		"ls_sf_dev_split_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sf_dev_split_wlad'",
+			"defaultValue": "jdbc:snowflake://@{linkedService().AccountName}.snowflakecomputing.com/?user=@{linkedService().Username}&db=@{linkedService().Database}&warehouse=@{linkedService().Warehouse}&role=@{linkedService().Role}"
+		},
+		"ls_sftp_dev_split_wlad_passPhrase": {
+			"type": "secureString",
+			"metadata": "Secure string for 'passPhrase' of 'ls_sftp_dev_split_wlad'"
+		},
+		"ls_blob_dev_split_wlad_properties_typeProperties_sasUri_secretName": {
+			"type": "string",
+			"defaultValue": "@linkedService().KVSasUrl"
+		},
+		"ls_sftp_dev_split_wlad_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "@{linkedService().Hostname}"
+		},
+		"ls_sftp_dev_split_wlad_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().Username}"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceBlobJSON')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ContainerName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"container": {
+							"value": "@dataset().ContainerName",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceFileJSON')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_file_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureFileStorageLocation"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceSFTPJSON')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sftp_dev_wlad",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"Username": {
+							"value": "@dataset().Username",
+							"type": "Expression"
+						},
+						"DataWarehouseName": {
+							"value": "@dataset().DataWarehouseName",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"Username": {
+						"type": "string",
+						"defaultValue": "clearboxretail"
+					},
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Baccardi"
+					},
+					"FilePath": {
+						"type": "string",
+						"defaultValue": "/outbound/processed"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "SftpLocation",
+						"folderPath": {
+							"value": "@dataset().FilePath",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SqlServerTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sqls_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Edgewell"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [
+					{
+						"name": "ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "DATE",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "SKU_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "SKU_DESCRIPTION",
+						"type": "varchar"
+					},
+					{
+						"name": "SKU_CODE",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "SKU_EAN",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "CLIENT",
+						"type": "varchar"
+					},
+					{
+						"name": "SUB_CALL",
+						"type": "varchar"
+					},
+					{
+						"name": "RETAILER",
+						"type": "varchar"
+					},
+					{
+						"name": "STORE_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "STORE_DESCRIPTION",
+						"type": "varchar"
+					},
+					{
+						"name": "CALL_DATE",
+						"type": "date"
+					},
+					{
+						"name": "CALL_ID",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "QUESTION",
+						"type": "varchar"
+					},
+					{
+						"name": "RESPONSE",
+						"type": "varchar"
+					},
+					{
+						"name": "ADDITIONAL_INFO",
+						"type": "varchar"
+					},
+					{
+						"name": "ETL_UUID",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "INGEST",
+					"table": "RAW_TACTICAL_EDGEWELL_WITHETLUUID"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TargetFileJSON')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_file_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"DatawareHouseName": {
+						"type": "string"
+					},
+					"FileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureFileStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@concat('Import/',dataset().DatawareHouseName,'/InProcess/')",
+							"type": "Expression"
+						}
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TargetTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sf_dev_wlad",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"DatawarehouseName": {
+							"value": "@dataset().DatawarehouseName",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"TableName": {
+						"type": "string"
+					},
+					"SchemaName": {
+						"type": "string"
+					},
+					"DatawarehouseName": {
+						"type": "string",
+						"defaultValue": "INTERNAL_DEV_WLAD"
+					}
+				},
+				"annotations": [],
+				"type": "SnowflakeTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().SchemaName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().TableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/delimiterout')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "AutoCSVDebug"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "output/mydataflow123partfiles",
+						"container": "mycontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynadelim')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"delim": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "AutoCSVDebug"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "moviesDB.csv",
+						"folderPath": "SampleData",
+						"container": "mycontainer"
+					},
+					"columnDelimiter": {
+						"value": "@dataset().delim",
+						"type": "Expression"
+					},
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/folderout')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "AutoCSVDebug"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "output/mydataflow123partfiles",
+						"container": "mycontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_blob_dev_split_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"KVSasUrl": {
+						"type": "string",
+						"defaultValue": "sa-blob-sas-uri-edgewell"
+					}
+				},
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"sasUri": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "kv_dev_wlad",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "[parameters('ls_blob_dev_split_wlad_properties_typeProperties_sasUri_secretName')]",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_file_dev_split_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"StorageAccountName": {
+						"type": "string",
+						"defaultValue": "azuukwstdevsandboxwlad"
+					},
+					"FileShare": {
+						"type": "string",
+						"defaultValue": "stfs-sandbox-dev-wlad"
+					},
+					"KVStorageAccKey": {
+						"type": "string",
+						"defaultValue": "sa-access-key-edgewell"
+					}
+				},
+				"annotations": [],
+				"type": "AzureFileStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_file_dev_split_wlad_connectionString')]",
+					"accountKey": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "kv_dev_wlad",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().KVStorageAccKey",
+							"type": "Expression"
+						}
+					},
+					"fileShare": "@{linkedService().FileShare}"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_sf_dev_split_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"AccountName": {
+						"type": "string",
+						"defaultValue": "clearboxretail-demo"
+					},
+					"Username": {
+						"type": "string",
+						"defaultValue": "wbielski"
+					},
+					"Database": {
+						"type": "string",
+						"defaultValue": "INTERNAL_DEV_WLAD"
+					},
+					"Warehouse": {
+						"type": "string",
+						"defaultValue": "CLEARBOX_DEV_LOAD"
+					},
+					"Password": {
+						"type": "string",
+						"defaultValue": "sf-edgewell-password"
+					},
+					"Role": {
+						"type": "string",
+						"defaultValue": "LOAD_SERVICE"
+					}
+				},
+				"annotations": [],
+				"type": "Snowflake",
+				"typeProperties": {
+					"authenticationType": "Basic",
+					"connectionString": "[parameters('ls_sf_dev_split_wlad_connectionString')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "kv_dev_wlad",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().Password",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_sftp_dev_split_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"Hostname": {
+						"type": "string"
+					},
+					"Username": {
+						"type": "string"
+					},
+					"SecretName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Sftp",
+				"typeProperties": {
+					"host": "[parameters('ls_sftp_dev_split_wlad_properties_typeProperties_host')]",
+					"port": 22,
+					"skipHostKeyValidation": true,
+					"authenticationType": "SshPublicKey",
+					"userName": "[parameters('ls_sftp_dev_split_wlad_properties_typeProperties_userName')]",
+					"privateKeyContent": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "kv_dev_wlad",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": {
+							"value": "@linkedService().SecretName",
+							"type": "Expression"
+						}
+					},
+					"passPhrase": {
+						"type": "SecureString",
+						"value": "[parameters('ls_sftp_dev_split_wlad_passPhrase')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DiffRG ETL Create Logs')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "set elt_uuid",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "elt_uuid",
+							"value": {
+								"value": "@if(\n  or(\n    empty(coalesce(pipeline().parameters.uuid,'')),\n    less(length(pipeline().parameters.uuid),32)\n  ),\n  guid('N'),\n  pipeline().parameters.uuid\n)\n\n",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "If uuid is empty",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "set elt_uuid",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@or(\nempty(coalesce(pipeline().parameters.uuid,'')),\nless(length(pipeline().parameters.uuid),32)\n)",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Update ingestion",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "ls_sf_dev_split_wlad",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"AccountName": {
+												"value": "@json(pipeline().parameters.cfg).datastore.account",
+												"type": "Expression"
+											},
+											"Username": {
+												"value": "@json(pipeline().parameters.cfg).datastore.username",
+												"type": "Expression"
+											},
+											"Database": {
+												"value": "@json(pipeline().parameters.cfg).datastore.database",
+												"type": "Expression"
+											},
+											"Warehouse": {
+												"value": "@json(pipeline().parameters.cfg).datastore.warehouse",
+												"type": "Expression"
+											},
+											"Password": {
+												"value": "@json(pipeline().parameters.cfg).datastore.password_kv",
+												"type": "Expression"
+											},
+											"Role": {
+												"value": "@json(pipeline().parameters.cfg).datastore.role",
+												"type": "Expression"
+											}
+										}
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"parameters": [
+													{
+														"name": "source_size",
+														"type": "Int32",
+														"value": "0",
+														"direction": "Input"
+													},
+													{
+														"name": "rowsRead",
+														"type": "Int16",
+														"value": {
+															"value": "@pipeline().parameters.rows_read",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "128"
+													},
+													{
+														"name": "rowsCopied",
+														"type": "Int16",
+														"value": {
+															"value": "@pipeline().parameters.rows_copied",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "first_error",
+														"type": "String",
+														"value": "No",
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "errors_seen",
+														"type": "Int16",
+														"value": {
+															"value": "@pipeline().parameters.errors_seen",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "status",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.status",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "512"
+													},
+													{
+														"name": "elt_uuid",
+														"type": "String",
+														"value": {
+															"value": "@variables('elt_uuid')",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													}
+												],
+												"type": "NonQuery",
+												"text": "update APP.INGESTION set \n  source_size = ?,\n  rows_parsed = ?,\n  rows_loaded = ?,\n  first_error = ?,\n  errors_seen = ?,\n  status = ?\nwhere uuid = to_binary(?,'hex')"
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Create ingestion",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "ls_sf_dev_split_wlad",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"AccountName": {
+												"value": "@json(pipeline().parameters.cfg).datastore.account",
+												"type": "Expression"
+											},
+											"Username": {
+												"value": "@json(pipeline().parameters.cfg).datastore.username",
+												"type": "Expression"
+											},
+											"Database": {
+												"value": "@json(pipeline().parameters.cfg).datastore.database",
+												"type": "Expression"
+											},
+											"Warehouse": {
+												"value": "@json(pipeline().parameters.cfg).datastore.warehouse",
+												"type": "Expression"
+											},
+											"Password": {
+												"value": "@json(pipeline().parameters.cfg).datastore.password_kv",
+												"type": "Expression"
+											},
+											"Role": {
+												"value": "@json(pipeline().parameters.cfg).datastore.role",
+												"type": "Expression"
+											}
+										}
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"parameters": [
+													{
+														"name": "elt_uuid",
+														"type": "String",
+														"value": {
+															"value": "@variables('elt_uuid')",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "local_file",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.local_file",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "128"
+													},
+													{
+														"name": "blob_file",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.blob_file",
+															"type": "Expression"
+														},
+														"direction": "Input"
+													},
+													{
+														"name": "tenant_code",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.tenant_code",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "datasource_code",
+														"type": "String",
+														"value": {
+															"value": "@coalesce(\n    pipeline().parameters.datasource,\n    pipeline().parameters.tenant_code\n)",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "dest_schema",
+														"type": "String",
+														"value": {
+															"value": "@coalesce(\n    pipeline().parameters.dest_schema,\n    json(variables('cfg')).datastore.schema\n)",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "dest_table",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.dest_table",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "remarks",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.remarks",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "512"
+													},
+													{
+														"name": "attr",
+														"type": "String",
+														"value": {
+															"value": "@string(pipeline().parameters.attr)",
+															"type": "Expression"
+														},
+														"direction": "Input"
+													},
+													{
+														"name": "run_id",
+														"type": "String",
+														"value": {
+															"value": "@pipeline()?.TriggeredByPipelineRunId",
+															"type": "Expression"
+														},
+														"direction": "Input"
+													},
+													{
+														"name": "pipeline_name",
+														"type": "String",
+														"value": {
+															"value": "@pipeline()?.TriggeredByPipelineName",
+															"type": "Expression"
+														},
+														"direction": "Input"
+													}
+												],
+												"type": "NonQuery",
+												"text": "insert into app.INGESTION (uuid, start_time, status, username, host, local_file, blob_file, tenant_code, datasource_code, dest_schema, dest_table, remarks, attr)\n  select to_binary(?,'hex'),\n  current_timestamp,'INIT','ADF','-',\n  ?,\n  ?,\n  ?,\n  ?,\n  ?,\n  ?,\n  ?, \nobject_insert(object_insert(coalesce(try_parse_json(?),object_construct()), 'ADF.TriggeredByPipelineRunId',?),'ADF.TriggeredByPipelineName',?)"
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Set output",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "If uuid is empty",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "pipelineReturnValue",
+							"value": [
+								{
+									"key": "uuid",
+									"value": {
+										"type": "Expression",
+										"content": "@variables('elt_uuid')"
+									}
+								}
+							],
+							"setSystemVariable": true
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"blob_file": {
+						"type": "string"
+					},
+					"local_file": {
+						"type": "string"
+					},
+					"tenant_code": {
+						"type": "string"
+					},
+					"slot": {
+						"type": "string",
+						"defaultValue": "prod"
+					},
+					"datasource": {
+						"type": "string"
+					},
+					"uuid": {
+						"type": "string"
+					},
+					"dest_table": {
+						"type": "string"
+					},
+					"dest_schema": {
+						"type": "string"
+					},
+					"attr": {
+						"type": "string"
+					},
+					"sf_copy_stats": {
+						"type": "array",
+						"defaultValue": []
+					},
+					"sf_copy_output": {
+						"type": "object"
+					},
+					"remarks": {
+						"type": "string"
+					},
+					"status": {
+						"type": "string"
+					},
+					"rows_read": {
+						"type": "string"
+					},
+					"rows_copied": {
+						"type": "string"
+					},
+					"errors_seen": {
+						"type": "string"
+					},
+					"cfg": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"elt_uuid": {
+						"type": "String",
+						"defaultValue": "00000000000000000000000000000000"
+					},
+					"subscription_id": {
+						"type": "String",
+						"defaultValue": "6a4c5e4b-460f-458a-8296-f42254574265"
+					},
+					"app_config": {
+						"type": "Array",
+						"defaultValue": []
+					},
+					"cfg": {
+						"type": "String",
+						"defaultValue": "{}"
+					},
+					"fileinfo": {
+						"type": "Array",
+						"defaultValue": []
+					},
+					"sf_copy_stats": {
+						"type": "Array",
+						"defaultValue": []
+					}
+				},
+				"folder": {
+					"name": "Split Into Different RGs"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-23T18:41:22Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sf_dev_split_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DiffRG ETL Generic JSON Cleanup')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Switch",
+						"type": "Switch",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"on": {
+								"value": "@pipeline().parameters.DataWarehouseName",
+								"type": "Expression"
+							},
+							"cases": [
+								{
+									"value": "Edgewell",
+									"activities": [
+										{
+											"name": "Set Column Mapping RAW_TACTICAL_EDGEWELL_TRIMMED",
+											"description": "Set Column Mapping for RAW_TACTICAL_EDGEWELL_TRIMMED",
+											"type": "SetVariable",
+											"dependsOn": [
+												{
+													"activity": "Script2",
+													"dependencyConditions": [
+														"Skipped"
+													]
+												}
+											],
+											"policy": {
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"variableName": "Column_Mapping_String",
+												"value": "{\n\t\"type\": \"TabularTranslator\",\n\t\"mappings\": [\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"date\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"date\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_description\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_description\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_code\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_code\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_ean\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_ean\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"client\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"client\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sub_call\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sub_call\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"retailer\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"retailer\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"store_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"store_id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"store_description\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"store_description\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_date\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"call_date\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t}\n\t\t}\n\t]\n}"
+											}
+										},
+										{
+											"name": "Set Column Mapping TRIMMED_QUESTIONS",
+											"description": "Set Column Mapping for RAW_TACTICAL_EDGEWELL_TRIMMED_QUESTIONS",
+											"type": "SetVariable",
+											"dependsOn": [
+												{
+													"activity": "Set Column Mapping RAW_TACTICAL_EDGEWELL_TRIMMED",
+													"dependencyConditions": [
+														"Succeeded"
+													]
+												}
+											],
+											"policy": {
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"variableName": "Column Mapping String Helper",
+												"value": "{\n\t\"type\": \"TabularTranslator\",\n\t\"mappings\": [\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"question\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"question\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"response\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"response\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"additional_info\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"additional_info\"\n\t\t\t}\n\t\t}\n\t]\n}"
+											}
+										},
+										{
+											"name": "Copy TRIMMED",
+											"type": "Copy",
+											"dependsOn": [
+												{
+													"activity": "Set Column Mapping RAW_TACTICAL_EDGEWELL_TRIMMED",
+													"dependencyConditions": [
+														"Succeeded"
+													]
+												}
+											],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "SnowflakeSource",
+													"query": "SELECT ID,DATE,SKU_ID ,SKU_DESCRIPTION ,SKU_CODE ,SKU_EAN ,CLIENT,SUB_CALL ,RETAILER,STORE_ID ,STORE_DESCRIPTION ,CALL_DATE,CALL_ID FROM INGEST.RAW_TACTICAL_EDGEWELL",
+													"exportSettings": {
+														"type": "SnowflakeExportCopyCommand"
+													}
+												},
+												"sink": {
+													"type": "SnowflakeSink",
+													"importSettings": {
+														"type": "SnowflakeImportCopyCommand"
+													}
+												},
+												"enableStaging": true,
+												"stagingSettings": {
+													"linkedServiceName": {
+														"referenceName": "ls_blob_dev_wlad",
+														"type": "LinkedServiceReference"
+													}
+												},
+												"translator": {
+													"value": "@variables('Column_Mapping_String')",
+													"type": "Expression"
+												}
+											},
+											"inputs": [
+												{
+													"referenceName": "TargetTable",
+													"type": "DatasetReference",
+													"parameters": {
+														"TableName": "RAW_TACTICAL_EDGEWELL",
+														"SchemaName": "INGEST"
+													}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "TargetTable",
+													"type": "DatasetReference",
+													"parameters": {
+														"TableName": "RAW_TACTICAL_EDGEWELL_TRIMMED",
+														"SchemaName": "INGEST"
+													}
+												}
+											]
+										},
+										{
+											"name": "Copy TRIMMED_QUESTIONS",
+											"type": "Copy",
+											"dependsOn": [
+												{
+													"activity": "Set Column Mapping TRIMMED_QUESTIONS",
+													"dependencyConditions": [
+														"Succeeded"
+													]
+												}
+											],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "SnowflakeSource",
+													"query": "SELECT CALL_ID, QUESTION, RESPONSE, ADDITIONAL_INFO FROM INGEST.RAW_TACTICAL_EDGEWELL",
+													"exportSettings": {
+														"type": "SnowflakeExportCopyCommand"
+													}
+												},
+												"sink": {
+													"type": "SnowflakeSink",
+													"importSettings": {
+														"type": "SnowflakeImportCopyCommand"
+													}
+												},
+												"enableStaging": true,
+												"stagingSettings": {
+													"linkedServiceName": {
+														"referenceName": "ls_blob_dev_wlad",
+														"type": "LinkedServiceReference"
+													}
+												},
+												"translator": {
+													"value": "@variables('Column Mapping String Helper')",
+													"type": "Expression"
+												}
+											},
+											"inputs": [
+												{
+													"referenceName": "TargetTable",
+													"type": "DatasetReference",
+													"parameters": {
+														"TableName": "RAW_TACTICAL_EDGEWELL",
+														"SchemaName": "INGEST"
+													}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "TargetTable",
+													"type": "DatasetReference",
+													"parameters": {
+														"TableName": "RAW_TACTICAL_EDGEWELL_TRIMMED_QUESTIONS",
+														"SchemaName": "INGEST"
+													}
+												}
+											]
+										},
+										{
+											"name": "Script1",
+											"type": "Script",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"linkedServiceName": {
+												"referenceName": "ls_sf_dev_wlad",
+												"type": "LinkedServiceReference"
+											},
+											"typeProperties": {
+												"scripts": [
+													{
+														"type": "Query",
+														"text": "INSERT INTO INGEST.RAW_TACTICAL_EDGEWELL_TRIMMED(ID,DATE,SKU_ID ,SKU_DESCRIPTION ,SKU_CODE ,SKU_EAN ,CLIENT,SUB_CALL ,RETAILER,STORE_ID ,STORE_DESCRIPTION ,CALL_DATE,CALL_ID) \nSELECT ID,DATE,SKU_ID ,SKU_DESCRIPTION ,SKU_CODE ,SKU_EAN ,CLIENT,SUB_CALL ,RETAILER,STORE_ID ,STORE_DESCRIPTION ,CALL_DATE,CALL_ID FROM INGEST.RAW_TACTICAL_EDGEWELL\n"
+													}
+												],
+												"scriptBlockExecutionTimeout": "02:00:00"
+											}
+										},
+										{
+											"name": "Script2",
+											"type": "Script",
+											"dependsOn": [
+												{
+													"activity": "Script1",
+													"dependencyConditions": [
+														"Succeeded"
+													]
+												}
+											],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"linkedServiceName": {
+												"referenceName": "ls_sf_dev_wlad",
+												"type": "LinkedServiceReference"
+											},
+											"typeProperties": {
+												"scripts": [
+													{
+														"type": "Query",
+														"text": "INSERT INTO INGEST.RAW_TACTICAL_EDGEWELL_TRIMMED_QUESTIONS(CALL_ID, QUESTION, RESPONSE, ADDITIONAL_INFO) \nSELECT CALL_ID, QUESTION, RESPONSE, ADDITIONAL_INFO FROM INGEST.RAW_TACTICAL_EDGEWELL;\n"
+													}
+												],
+												"scriptBlockExecutionTimeout": "02:00:00"
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Edgewell"
+					},
+					"Slot": {
+						"type": "string",
+						"defaultValue": "dev"
+					}
+				},
+				"variables": {
+					"JSON_Properties": {
+						"type": "Array"
+					},
+					"JSON_Properties_String": {
+						"type": "String"
+					},
+					"Number_of_JSON_Properties": {
+						"type": "Integer"
+					},
+					"Current_Property": {
+						"type": "Integer"
+					},
+					"Column_Mapping_String": {
+						"type": "String"
+					},
+					"Column Mapping String Helper": {
+						"type": "String"
+					},
+					"Current_Property_Helper": {
+						"type": "Integer"
+					},
+					"Helper_String": {
+						"type": "String"
+					},
+					"ReadyColumnMapping": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Split Into Different RGs"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-22T15:21:46Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/TargetTable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ETL Generic Extract JSON ALL')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Dummy Action",
+						"type": "Fail",
+						"dependsOn": [
+							{
+								"activity": "Lookup JSON",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"message": "Dummy Fail (this is supposed to fail)",
+							"errorCode": "555"
+						}
+					},
+					{
+						"name": "Lookup JSON",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureFileStorageReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/')",
+										"type": "Expression"
+									},
+									"wildcardFileName": {
+										"value": "@concat(pipeline().parameters.FilenamePattern, '*.json')",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "SourceFileJSON",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "Convert JSON_Properties String to Array",
+						"description": "Contains an array of properties in JSON returned by the previous step",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Clean Up JSON Properties String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "JSON_Properties",
+							"value": {
+								"value": "@split(variables('Helper_String'), '^')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Until",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Set Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('Current_Property'),variables('Number_of_JSON_Properties'))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Append Column Mapping String",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Set Column Mapping String Helper",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Column_Mapping_String",
+										"value": {
+											"value": "@variables('Column Mapping String Helper')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Column Mapping String Helper",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Column Mapping String Helper",
+										"value": {
+											"value": "@concat(variables('Column_Mapping_String'),'{\"source\": {\"name\": \"', variables('JSON_Properties')[variables('Current_Property')], '\"},\"target\":{\"name\":\"', variables('JSON_Properties')[variables('Current_Property')], '\"}},')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Current Property Helper",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Append Column Mapping String",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Current_Property_Helper",
+										"value": {
+											"value": "@add(variables('Current_Property'),2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Current Property",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Set Current Property Helper",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Current_Property",
+										"value": {
+											"value": "@variables('Current_Property_Helper')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					},
+					{
+						"name": "Set Number of JSON Properties",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Convert JSON_Properties String to Array",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Number_of_JSON_Properties",
+							"value": {
+								"value": "@div(length(variables('JSON_Properties')), 2)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set Current_Property",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Convert JSON_Properties String to Array",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Current_Property",
+							"value": 0
+						}
+					},
+					{
+						"name": "Set Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set Current_Property",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Set Number of JSON Properties",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column_Mapping_String",
+							"value": "{\n  \"type\": \"TabularTranslator\",\n  \"mappings\": ["
+						}
+					},
+					{
+						"name": "Clean Up Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Until",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column Mapping String Helper",
+							"value": {
+								"value": "@substring(variables('Column_Mapping_String'), 0, sub(length(variables('Column_Mapping_String')), 1))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Finalize Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Clean Up Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column_Mapping_String",
+							"value": {
+								"value": "@concat(variables('Column Mapping String Helper'), ']}')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set JSON Properties String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup JSON",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "JSON_Properties_String",
+							"value": {
+								"value": "@string(activity('Lookup JSON').output.firstRow)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Clean Up JSON Properties String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set JSON Properties String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Helper_String",
+							"value": {
+								"value": "@replace(replace(replace(replace(replace(replace(replace(replace(variables('JSON_Properties_String'), '/', ''), '\":', '^'), '\"', ''), ' ,', '---'), ',', '^'), '---', ' ,'), '{', ''), '}', '')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Move File to Processed",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Filter Filename",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "AzureFileStorageReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/')",
+										"type": "Expression"
+									},
+									"wildcardFileName": {
+										"value": "@activity('Filter Filename').output.value[0].name",
+										"type": "Expression"
+									},
+									"deleteFilesAfterCompletion": true
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureFileStorageWriteSettings",
+									"copyBehavior": "PreserveHierarchy"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "FileMover",
+								"type": "DatasetReference",
+								"parameters": {
+									"DataWarehouseName": {
+										"value": "@pipeline().parameters.DataWarehouseName",
+										"type": "Expression"
+									},
+									"InOrOut": "InProcess"
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "FileMover",
+								"type": "DatasetReference",
+								"parameters": {
+									"DataWarehouseName": {
+										"value": "@pipeline().parameters.DataWarehouseName",
+										"type": "Expression"
+									},
+									"InOrOut": "Processed"
+								}
+							}
+						]
+					},
+					{
+						"name": "Get Metadata",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "Switch",
+								"dependencyConditions": [
+									"Succeeded",
+									"Skipped"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "FileMover",
+								"type": "DatasetReference",
+								"parameters": {
+									"DataWarehouseName": "Edgewell",
+									"InOrOut": "InProcess"
+								}
+							},
+							"fieldList": [
+								"itemName",
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureFileStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Filter Filename",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata').output.childItems",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@and(equals(item().type,'File'),startswith(item().name, pipeline().parameters.FilenamePattern))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Switch",
+						"type": "Switch",
+						"dependsOn": [
+							{
+								"activity": "Finalize Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"on": {
+								"value": "@pipeline().parameters.DataWarehouseName",
+								"type": "Expression"
+							},
+							"cases": [
+								{
+									"value": "Edgewell",
+									"activities": [
+										{
+											"name": "Copy data from Source to Ingest",
+											"type": "Copy",
+											"state": "Inactive",
+											"onInactiveMarkAs": "Succeeded",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "JsonSource",
+													"storeSettings": {
+														"type": "AzureFileStorageReadSettings",
+														"recursive": true,
+														"enablePartitionDiscovery": false
+													},
+													"formatSettings": {
+														"type": "JsonReadSettings"
+													}
+												},
+												"sink": {
+													"type": "JsonSink",
+													"storeSettings": {
+														"type": "AzureFileStorageWriteSettings"
+													},
+													"formatSettings": {
+														"type": "JsonWriteSettings"
+													}
+												},
+												"enableStaging": false,
+												"translator": {
+													"value": "@variables('Column_Mapping_String')",
+													"type": "Expression"
+												}
+											},
+											"inputs": [
+												{
+													"referenceName": "SourceFileJSON",
+													"type": "DatasetReference",
+													"parameters": {}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "SourceFileJSON",
+													"type": "DatasetReference",
+													"parameters": {}
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Edgewell"
+					},
+					"FilenamePattern": {
+						"type": "string",
+						"defaultValue": "tactical-edgewell"
+					}
+				},
+				"variables": {
+					"JSON_Properties": {
+						"type": "Array"
+					},
+					"JSON_Properties_String": {
+						"type": "String"
+					},
+					"Number_of_JSON_Properties": {
+						"type": "Integer"
+					},
+					"Current_Property": {
+						"type": "Integer"
+					},
+					"Column_Mapping_String": {
+						"type": "String"
+					},
+					"Column Mapping String Helper": {
+						"type": "String"
+					},
+					"Current_Property_Helper": {
+						"type": "Integer"
+					},
+					"Helper_String": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Dev Leftovers"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-11T18:02:32Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SourceFileJSON')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ETL Generic Generate Column Mapping Blob')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Failed To Connect",
+						"type": "Fail",
+						"dependsOn": [
+							{
+								"activity": "Lookup JSON",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"message": "Failed to connect to Storage Account",
+							"errorCode": "555"
+						}
+					},
+					{
+						"name": "Lookup JSON",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFileName": {
+										"value": "@concat(pipeline().parameters.FilenamePattern, '*.json')",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "SourceBlobJSON",
+								"type": "DatasetReference",
+								"parameters": {
+									"ContainerName": {
+										"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					{
+						"name": "If File Exists",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Lookup JSON",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@bool(contains(activity('Lookup JSON').output, 'firstRow'))",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "File Not Found",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "File Not Found",
+										"errorCode": "554"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Convert JSON_Properties String to Array",
+						"description": "Contains an array of properties in JSON returned by the previous step",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Clean Up JSON Properties String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "JSON_Properties",
+							"value": {
+								"value": "@split(variables('Helper_String'), '^')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Until",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Set Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('Current_Property'), sub(variables('Number_of_JSON_Properties'), 1))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Append Column Mapping String",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Set Column Mapping String Helper",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Column_Mapping_String",
+										"value": {
+											"value": "@variables('Column Mapping String Helper')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Column Mapping String Helper",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Column Mapping String Helper",
+										"value": {
+											"value": "@concat(variables('Column_Mapping_String'),'{\"source\": {\"name\": \"', variables('JSON_Properties')[variables('Current_Property')], '\"},\"target\":{\"name\":\"', variables('JSON_Properties')[variables('Current_Property')], '\"}},')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Current Property Helper",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Append Column Mapping String",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Current_Property_Helper",
+										"value": {
+											"value": "@add(variables('Current_Property'),2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Current Property",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Set Current Property Helper",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Current_Property",
+										"value": {
+											"value": "@variables('Current_Property_Helper')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					},
+					{
+						"name": "Set Number of JSON Properties",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Convert JSON_Properties String to Array",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Number_of_JSON_Properties",
+							"value": {
+								"value": "@length(variables('JSON_Properties'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set Current_Property",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Convert JSON_Properties String to Array",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Current_Property",
+							"value": 0
+						}
+					},
+					{
+						"name": "Set Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set Current_Property",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Set Number of JSON Properties",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column_Mapping_String",
+							"value": "{\n  \"type\": \"TabularTranslator\",\n  \"mappings\": ["
+						}
+					},
+					{
+						"name": "Clean Up Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Until",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column Mapping String Helper",
+							"value": {
+								"value": "@substring(variables('Column_Mapping_String'), 0, sub(length(variables('Column_Mapping_String')), 1))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Finalize Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Clean Up Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "pipelineReturnValue",
+							"value": [
+								{
+									"key": "ColumnMappingString",
+									"value": {
+										"type": "Expression",
+										"content": "@concat(variables('Column Mapping String Helper'), ']}')"
+									}
+								}
+							],
+							"setSystemVariable": true
+						}
+					},
+					{
+						"name": "Set JSON Properties String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "If File Exists",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "JSON_Properties_String",
+							"value": {
+								"value": "@string(activity('Lookup JSON').output.firstRow)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Clean Up JSON Properties String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set JSON Properties String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Helper_String",
+							"value": {
+								"value": "@replace(replace(replace(replace(replace(replace(replace(replace(variables('JSON_Properties_String'), '/', ''), '\":', '^'), '\"', ''), ' ,', '---'), ',', '^'), '---', ' ,'), '{', ''), '}', '')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Edgewell"
+					},
+					"FilenamePattern": {
+						"type": "string",
+						"defaultValue": "tactical-edgewell"
+					}
+				},
+				"variables": {
+					"JSON_Properties": {
+						"type": "Array"
+					},
+					"JSON_Properties_String": {
+						"type": "String"
+					},
+					"Number_of_JSON_Properties": {
+						"type": "Integer"
+					},
+					"Current_Property": {
+						"type": "Integer"
+					},
+					"Column_Mapping_String": {
+						"type": "String"
+					},
+					"Column Mapping String Helper": {
+						"type": "String"
+					},
+					"Current_Property_Helper": {
+						"type": "Integer"
+					},
+					"Helper_String": {
+						"type": "String"
+					},
+					"ReadyColumnMapping": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Full Solution Wildcard File"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-15T15:58:39Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SourceBlobJSON')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ETL Generic Generate Column Mapping Two Step')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Failed To Connect",
+						"type": "Fail",
+						"dependsOn": [
+							{
+								"activity": "Lookup JSON",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"message": "Failed to connect to Storage Account",
+							"errorCode": "555"
+						}
+					},
+					{
+						"name": "Lookup JSON",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureFileStorageReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/')",
+										"type": "Expression"
+									},
+									"wildcardFileName": {
+										"value": "@pipeline().parameters.FilenamePattern",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "SourceFileJSON",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "If File Exists",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Lookup JSON",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@bool(contains(activity('Lookup JSON').output, 'firstRow'))",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "File Not Found",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "File Not Found",
+										"errorCode": "554"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Convert JSON_Properties String to Array",
+						"description": "Contains an array of properties in JSON returned by the previous step",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Clean Up JSON Properties String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "JSON_Properties",
+							"value": {
+								"value": "@split(variables('Helper_String'), '^')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Until",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Set Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('Current_Property'), sub(variables('Number_of_JSON_Properties'), 1))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Append Column Mapping String",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Set Column Mapping String Helper",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Column_Mapping_String",
+										"value": {
+											"value": "@variables('Column Mapping String Helper')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Column Mapping String Helper",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Column Mapping String Helper",
+										"value": {
+											"value": "@concat(variables('Column_Mapping_String'),'{\"source\": {\"name\": \"', variables('JSON_Properties')[variables('Current_Property')], '\"},\"target\":{\"name\":\"', replace(replace(replace(replace(variables('JSON_Properties')[variables('Current_Property')], ' ', '_'), '.', ''), '!', ''), '?', ''), '\"}},')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Current Property Helper",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Append Column Mapping String",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Current_Property_Helper",
+										"value": {
+											"value": "@add(variables('Current_Property'),2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Current Property",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Set Current Property Helper",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Current_Property",
+										"value": {
+											"value": "@variables('Current_Property_Helper')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					},
+					{
+						"name": "Set Number of JSON Properties",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Convert JSON_Properties String to Array",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Number_of_JSON_Properties",
+							"value": {
+								"value": "@length(variables('JSON_Properties'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set Current_Property",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Convert JSON_Properties String to Array",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Current_Property",
+							"value": 0
+						}
+					},
+					{
+						"name": "Set Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set Current_Property",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Set Number of JSON Properties",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column_Mapping_String",
+							"value": "{\n  \"type\": \"TabularTranslator\",\n  \"mappings\": ["
+						}
+					},
+					{
+						"name": "Clean Up Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Until",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column Mapping String Helper",
+							"value": {
+								"value": "@substring(variables('Column_Mapping_String'), 0, sub(length(variables('Column_Mapping_String')), 1))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Finalize Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Clean Up Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "pipelineReturnValue",
+							"value": [
+								{
+									"key": "ColumnMappingString",
+									"value": {
+										"type": "Expression",
+										"content": "@concat(variables('Column Mapping String Helper'), ']}')"
+									}
+								}
+							],
+							"setSystemVariable": true
+						}
+					},
+					{
+						"name": "Set JSON Properties String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "If File Exists",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "JSON_Properties_String",
+							"value": {
+								"value": "@string(activity('Lookup JSON').output.firstRow)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Clean Up JSON Properties String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set JSON Properties String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Helper_String",
+							"value": {
+								"value": "@replace(replace(replace(replace(replace(replace(replace(replace(replace(variables('JSON_Properties_String'), ',\"', '^'),'/', ''), '\":', '^'), '\"', ''), ' ,', '---'), ',', ','), '---', ' ,'), '{', ''), '}', '')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Edgewell"
+					},
+					"FilenamePattern": {
+						"type": "string",
+						"defaultValue": "tactical-edgewell"
+					}
+				},
+				"variables": {
+					"JSON_Properties": {
+						"type": "Array"
+					},
+					"JSON_Properties_String": {
+						"type": "String"
+					},
+					"Number_of_JSON_Properties": {
+						"type": "Integer"
+					},
+					"Current_Property": {
+						"type": "Integer"
+					},
+					"Column_Mapping_String": {
+						"type": "String"
+					},
+					"Column Mapping String Helper": {
+						"type": "String"
+					},
+					"Current_Property_Helper": {
+						"type": "Integer"
+					},
+					"Helper_String": {
+						"type": "String"
+					},
+					"ReadyColumnMapping": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-15T18:22:46Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SourceFileJSON')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ETL Generic Generate Column Mapping')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Failed To Connect",
+						"type": "Fail",
+						"dependsOn": [
+							{
+								"activity": "Lookup JSON",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"message": "Failed to connect to Storage Account",
+							"errorCode": "555"
+						}
+					},
+					{
+						"name": "Lookup JSON",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureFileStorageReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": {
+										"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/')",
+										"type": "Expression"
+									},
+									"wildcardFileName": {
+										"value": "@concat(pipeline().parameters.FilenamePattern, '*.json')",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "SourceFileJSON",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						}
+					},
+					{
+						"name": "If File Exists",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Lookup JSON",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@bool(contains(activity('Lookup JSON').output, 'firstRow'))",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "File Not Found",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": "File Not Found",
+										"errorCode": "554"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Convert JSON_Properties String to Array",
+						"description": "Contains an array of properties in JSON returned by the previous step",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Clean Up JSON Properties String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "JSON_Properties",
+							"value": {
+								"value": "@split(variables('Helper_String'), '^')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Until",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "Set Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(variables('Current_Property'), sub(variables('Number_of_JSON_Properties'), 1))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Append Column Mapping String",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Set Column Mapping String Helper",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Column_Mapping_String",
+										"value": {
+											"value": "@variables('Column Mapping String Helper')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Column Mapping String Helper",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Column Mapping String Helper",
+										"value": {
+											"value": "@concat(variables('Column_Mapping_String'),'{\"source\": {\"name\": \"', variables('JSON_Properties')[variables('Current_Property')], '\"},\"target\":{\"name\":\"', variables('JSON_Properties')[variables('Current_Property')], '\"}},')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Current Property Helper",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Append Column Mapping String",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Current_Property_Helper",
+										"value": {
+											"value": "@add(variables('Current_Property'),2)",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Current Property",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Set Current Property Helper",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Current_Property",
+										"value": {
+											"value": "@variables('Current_Property_Helper')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"timeout": "0.12:00:00"
+						}
+					},
+					{
+						"name": "Set Number of JSON Properties",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Convert JSON_Properties String to Array",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Number_of_JSON_Properties",
+							"value": {
+								"value": "@length(variables('JSON_Properties'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Set Current_Property",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Convert JSON_Properties String to Array",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Current_Property",
+							"value": 0
+						}
+					},
+					{
+						"name": "Set Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set Current_Property",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Set Number of JSON Properties",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column_Mapping_String",
+							"value": "{\n  \"type\": \"TabularTranslator\",\n  \"mappings\": ["
+						}
+					},
+					{
+						"name": "Clean Up Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Until",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column Mapping String Helper",
+							"value": {
+								"value": "@substring(variables('Column_Mapping_String'), 0, sub(length(variables('Column_Mapping_String')), 1))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Finalize Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Clean Up Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "pipelineReturnValue",
+							"value": [
+								{
+									"key": "ColumnMappingString",
+									"value": {
+										"type": "Expression",
+										"content": "@concat(variables('Column Mapping String Helper'), ']}')"
+									}
+								}
+							],
+							"setSystemVariable": true
+						}
+					},
+					{
+						"name": "Set JSON Properties String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "If File Exists",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "JSON_Properties_String",
+							"value": {
+								"value": "@string(activity('Lookup JSON').output.firstRow)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Clean Up JSON Properties String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Set JSON Properties String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Helper_String",
+							"value": {
+								"value": "@replace(replace(replace(replace(replace(replace(replace(replace(variables('JSON_Properties_String'), '/', ''), '\":', '^'), '\"', ''), ' ,', '---'), ',', '^'), '---', ' ,'), '{', ''), '}', '')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Edgewell"
+					},
+					"FilenamePattern": {
+						"type": "string",
+						"defaultValue": "tactical-edgewell"
+					}
+				},
+				"variables": {
+					"JSON_Properties": {
+						"type": "Array"
+					},
+					"JSON_Properties_String": {
+						"type": "String"
+					},
+					"Number_of_JSON_Properties": {
+						"type": "Integer"
+					},
+					"Current_Property": {
+						"type": "Integer"
+					},
+					"Column_Mapping_String": {
+						"type": "String"
+					},
+					"Column Mapping String Helper": {
+						"type": "String"
+					},
+					"Current_Property_Helper": {
+						"type": "Integer"
+					},
+					"Helper_String": {
+						"type": "String"
+					},
+					"ReadyColumnMapping": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Full Solution Wildcard File"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-15T15:58:39Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SourceFileJSON')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ETL Generic JSON Cleanup')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Switch",
+						"type": "Switch",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"on": {
+								"value": "@pipeline().parameters.DataWarehouseName",
+								"type": "Expression"
+							},
+							"cases": [
+								{
+									"value": "Edgewell",
+									"activities": [
+										{
+											"name": "Set Column Mapping RAW_TACTICAL_EDGEWELL_TRIMMED",
+											"description": "Set Column Mapping for RAW_TACTICAL_EDGEWELL_TRIMMED",
+											"type": "SetVariable",
+											"dependsOn": [
+												{
+													"activity": "Script2",
+													"dependencyConditions": [
+														"Skipped"
+													]
+												}
+											],
+											"policy": {
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"variableName": "Column_Mapping_String",
+												"value": "{\n\t\"type\": \"TabularTranslator\",\n\t\"mappings\": [\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"date\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"date\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_description\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_description\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_code\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_code\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_ean\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_ean\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"client\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"client\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sub_call\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sub_call\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"retailer\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"retailer\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"store_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"store_id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"store_description\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"store_description\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_date\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"call_date\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t}\n\t\t}\n\t]\n}"
+											}
+										},
+										{
+											"name": "Set Column Mapping TRIMMED_QUESTIONS",
+											"description": "Set Column Mapping for RAW_TACTICAL_EDGEWELL_TRIMMED_QUESTIONS",
+											"type": "SetVariable",
+											"dependsOn": [
+												{
+													"activity": "Set Column Mapping RAW_TACTICAL_EDGEWELL_TRIMMED",
+													"dependencyConditions": [
+														"Succeeded"
+													]
+												}
+											],
+											"policy": {
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"variableName": "Column Mapping String Helper",
+												"value": "{\n\t\"type\": \"TabularTranslator\",\n\t\"mappings\": [\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"question\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"question\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"response\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"response\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"additional_info\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"additional_info\"\n\t\t\t}\n\t\t}\n\t]\n}"
+											}
+										},
+										{
+											"name": "Copy TRIMMED",
+											"type": "Copy",
+											"dependsOn": [
+												{
+													"activity": "Set Column Mapping RAW_TACTICAL_EDGEWELL_TRIMMED",
+													"dependencyConditions": [
+														"Succeeded"
+													]
+												}
+											],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "SnowflakeSource",
+													"query": "SELECT ID,DATE,SKU_ID ,SKU_DESCRIPTION ,SKU_CODE ,SKU_EAN ,CLIENT,SUB_CALL ,RETAILER,STORE_ID ,STORE_DESCRIPTION ,CALL_DATE,CALL_ID FROM INGEST.RAW_TACTICAL_EDGEWELL",
+													"exportSettings": {
+														"type": "SnowflakeExportCopyCommand"
+													}
+												},
+												"sink": {
+													"type": "SnowflakeSink",
+													"importSettings": {
+														"type": "SnowflakeImportCopyCommand"
+													}
+												},
+												"enableStaging": true,
+												"stagingSettings": {
+													"linkedServiceName": {
+														"referenceName": "ls_blob_dev_wlad",
+														"type": "LinkedServiceReference"
+													}
+												},
+												"translator": {
+													"value": "@variables('Column_Mapping_String')",
+													"type": "Expression"
+												}
+											},
+											"inputs": [
+												{
+													"referenceName": "TargetTable",
+													"type": "DatasetReference",
+													"parameters": {
+														"TableName": "RAW_TACTICAL_EDGEWELL",
+														"SchemaName": "INGEST"
+													}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "TargetTable",
+													"type": "DatasetReference",
+													"parameters": {
+														"TableName": "RAW_TACTICAL_EDGEWELL_TRIMMED",
+														"SchemaName": "INGEST"
+													}
+												}
+											]
+										},
+										{
+											"name": "Copy TRIMMED_QUESTIONS",
+											"type": "Copy",
+											"dependsOn": [
+												{
+													"activity": "Set Column Mapping TRIMMED_QUESTIONS",
+													"dependencyConditions": [
+														"Succeeded"
+													]
+												}
+											],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"typeProperties": {
+												"source": {
+													"type": "SnowflakeSource",
+													"query": "SELECT CALL_ID, QUESTION, RESPONSE, ADDITIONAL_INFO FROM INGEST.RAW_TACTICAL_EDGEWELL",
+													"exportSettings": {
+														"type": "SnowflakeExportCopyCommand"
+													}
+												},
+												"sink": {
+													"type": "SnowflakeSink",
+													"importSettings": {
+														"type": "SnowflakeImportCopyCommand"
+													}
+												},
+												"enableStaging": true,
+												"stagingSettings": {
+													"linkedServiceName": {
+														"referenceName": "ls_blob_dev_wlad",
+														"type": "LinkedServiceReference"
+													}
+												},
+												"translator": {
+													"value": "@variables('Column Mapping String Helper')",
+													"type": "Expression"
+												}
+											},
+											"inputs": [
+												{
+													"referenceName": "TargetTable",
+													"type": "DatasetReference",
+													"parameters": {
+														"TableName": "RAW_TACTICAL_EDGEWELL",
+														"SchemaName": "INGEST"
+													}
+												}
+											],
+											"outputs": [
+												{
+													"referenceName": "TargetTable",
+													"type": "DatasetReference",
+													"parameters": {
+														"TableName": "RAW_TACTICAL_EDGEWELL_TRIMMED_QUESTIONS",
+														"SchemaName": "INGEST"
+													}
+												}
+											]
+										},
+										{
+											"name": "Script1",
+											"type": "Script",
+											"dependsOn": [],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"linkedServiceName": {
+												"referenceName": "ls_sf_dev_wlad",
+												"type": "LinkedServiceReference"
+											},
+											"typeProperties": {
+												"scripts": [
+													{
+														"type": "Query",
+														"text": "INSERT INTO INGEST.RAW_TACTICAL_EDGEWELL_TRIMMED(ID,DATE,SKU_ID ,SKU_DESCRIPTION ,SKU_CODE ,SKU_EAN ,CLIENT,SUB_CALL ,RETAILER,STORE_ID ,STORE_DESCRIPTION ,CALL_DATE,CALL_ID) \nSELECT ID,DATE,SKU_ID ,SKU_DESCRIPTION ,SKU_CODE ,SKU_EAN ,CLIENT,SUB_CALL ,RETAILER,STORE_ID ,STORE_DESCRIPTION ,CALL_DATE,CALL_ID FROM INGEST.RAW_TACTICAL_EDGEWELL\n"
+													}
+												],
+												"scriptBlockExecutionTimeout": "02:00:00"
+											}
+										},
+										{
+											"name": "Script2",
+											"type": "Script",
+											"dependsOn": [
+												{
+													"activity": "Script1",
+													"dependencyConditions": [
+														"Succeeded"
+													]
+												}
+											],
+											"policy": {
+												"timeout": "0.12:00:00",
+												"retry": 0,
+												"retryIntervalInSeconds": 30,
+												"secureOutput": false,
+												"secureInput": false
+											},
+											"userProperties": [],
+											"linkedServiceName": {
+												"referenceName": "ls_sf_dev_wlad",
+												"type": "LinkedServiceReference"
+											},
+											"typeProperties": {
+												"scripts": [
+													{
+														"type": "Query",
+														"text": "INSERT INTO INGEST.RAW_TACTICAL_EDGEWELL_TRIMMED_QUESTIONS(CALL_ID, QUESTION, RESPONSE, ADDITIONAL_INFO) \nSELECT CALL_ID, QUESTION, RESPONSE, ADDITIONAL_INFO FROM INGEST.RAW_TACTICAL_EDGEWELL;\n"
+													}
+												],
+												"scriptBlockExecutionTimeout": "02:00:00"
+											}
+										}
+									]
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Edgewell"
+					},
+					"Slot": {
+						"type": "string",
+						"defaultValue": "dev"
+					}
+				},
+				"variables": {
+					"JSON_Properties": {
+						"type": "Array"
+					},
+					"JSON_Properties_String": {
+						"type": "String"
+					},
+					"Number_of_JSON_Properties": {
+						"type": "Integer"
+					},
+					"Current_Property": {
+						"type": "Integer"
+					},
+					"Column_Mapping_String": {
+						"type": "String"
+					},
+					"Column Mapping String Helper": {
+						"type": "String"
+					},
+					"Current_Property_Helper": {
+						"type": "Integer"
+					},
+					"Helper_String": {
+						"type": "String"
+					},
+					"ReadyColumnMapping": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-16T17:14:02Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/TargetTable')]"
+			]
+		}
+	]
+}

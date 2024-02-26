@@ -1,0 +1,66 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "azu-ukw-df-dev-sandbox-wlad"
+		},
+		"ls_csdb_dev_wlad_connectionString": {
+			"value": ""
+		},
+		"ls_file_dev_split_wlad_connectionString": {
+			"value": "DefaultEndpointsProtocol=https;AccountName=@{linkedService().StorageAccountName};EndpointSuffix=core.windows.net;"
+		},
+		"ls_file_dev_wlad_connectionString": {
+			"value": ""
+		},
+		"ls_sf_dev_split_wlad_connectionString": {
+			"value": "jdbc:snowflake://@{linkedService().AccountName}.snowflakecomputing.com/?user=@{linkedService().Username}&db=@{linkedService().Database}&warehouse=@{linkedService().Warehouse}&role=@{linkedService().Role}"
+		},
+		"ls_sf_dev_wlad_connectionString": {
+			"value": ""
+		},
+		"ls_sftp_dev_split_wlad_passPhrase": {
+			"value": ""
+		},
+		"ls_sftp_dev_wlad_privateKeyContent": {
+			"value": ""
+		},
+		"ls_sftp_dev_wlad_passPhrase": {
+			"value": ""
+		},
+		"ls_sqls_wlad_connectionString": {
+			"value": ""
+		},
+		"kv_dev_wlad_properties_typeProperties_baseUrl": {
+			"value": "https://azu-ukw-kv-dev-wlad.vault.azure.net/"
+		},
+		"ls_blob_dev_split_wlad_properties_typeProperties_sasUri_secretName": {
+			"value": "@linkedService().KVSasUrl"
+		},
+		"ls_blob_dev_wlad_sasUri": {
+			"value": ""
+		},
+		"ls_sftp_dev_split_wlad_properties_typeProperties_host": {
+			"value": "@{linkedService().Hostname}"
+		},
+		"ls_sftp_dev_split_wlad_properties_typeProperties_userName": {
+			"value": "@{linkedService().Username}"
+		},
+		"ls_sftp_dev_wlad_properties_typeProperties_host": {
+			"value": "sftp.zynchub4.co.uk"
+		},
+		"ls_sftp_dev_wlad_properties_typeProperties_userName": {
+			"value": "@{linkedService().Username}"
+		},
+		"ls_table_dev_wlad_sasUri": {
+			"value": ""
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

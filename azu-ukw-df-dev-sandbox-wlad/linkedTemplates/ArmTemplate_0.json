@@ -1,0 +1,1073 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "azu-ukw-df-dev-sandbox-wlad"
+		},
+		"ls_csdb_dev_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_csdb_dev_wlad'"
+		},
+		"ls_file_dev_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_file_dev_wlad'"
+		},
+		"ls_sf_dev_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sf_dev_wlad'"
+		},
+		"ls_sftp_dev_wlad_privateKeyContent": {
+			"type": "secureString",
+			"metadata": "Secure string for 'privateKeyContent' of 'ls_sftp_dev_wlad'"
+		},
+		"ls_sftp_dev_wlad_passPhrase": {
+			"type": "secureString",
+			"metadata": "Secure string for 'passPhrase' of 'ls_sftp_dev_wlad'"
+		},
+		"ls_sqls_wlad_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_sqls_wlad'"
+		},
+		"kv_dev_wlad_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://azu-ukw-kv-dev-wlad.vault.azure.net/"
+		},
+		"ls_blob_dev_wlad_sasUri": {
+			"type": "secureString",
+			"metadata": "Secure string for 'sasUri' of 'ls_blob_dev_wlad'"
+		},
+		"ls_sftp_dev_wlad_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "sftp.zynchub4.co.uk"
+		},
+		"ls_sftp_dev_wlad_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "@{linkedService().Username}"
+		},
+		"ls_table_dev_wlad_sasUri": {
+			"type": "secureString",
+			"metadata": "Secure string for 'sasUri' of 'ls_table_dev_wlad'"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Logic App Test')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute Logic App",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "POST",
+							"headers": {},
+							"url": "https://prod-10.uksouth.logic.azure.com:443/workflows/78818aae79a34617bb270ea5419a9eb4/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=y1bLXuZtmJMmlJy2BDHiJqHYiCf0Jh5YE3oYTjWumcU",
+							"body": {
+								"value": "{\n\n\"FileName\": \"callreportstest.json\",\n\"DataWarehouseName\" : \"Edgewell\",\n\"StorageAccountName\": \"azuukssadevedgewellwlad\",\n\"FileShare\": \"stfs-sandbox-dev-wlad\",\n\"SecretName\": \"sa-file-sas-uri-edgewell-new\",\n\n}",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"FileName": {
+						"type": "string",
+						"defaultValue": "callreportstest.json"
+					},
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Baccardi"
+					}
+				},
+				"folder": {
+					"name": "Dev Leftovers"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-24T16:04:57Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TestPipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 5
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "Dev Leftovers"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-23T09:09:04Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Web1",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": {
+								"value": "@concat('https://az-ukw-ac-dev-wlad.azconfig.io/kv/', pipeline().parameters.Edgewell_dev)",
+								"type": "Expression"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://az-ukw-ac-dev-wlad.azconfig.io"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Edgewell_dev": {
+						"type": "string",
+						"defaultValue": "Edgewell_dev"
+					}
+				},
+				"folder": {
+					"name": "Split Into Different RGs"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-22T18:29:23Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/kv_dev_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('kv_dev_wlad_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_blob_dev_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "A linked service to Wlad's dev storage account for testing purposes",
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"sasUri": "[parameters('ls_blob_dev_wlad_sasUri')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_csdb_dev_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "CosmosDb",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_csdb_dev_wlad_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_file_dev_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "A linked service to Wlad's file share for dev purposes",
+				"annotations": [],
+				"type": "AzureFileStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_file_dev_wlad_connectionString')]",
+					"fileShare": "stfs-sandbox-dev-wlad"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_sf_dev_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Linked Service to INTERNAL_DEV_WLAD database",
+				"parameters": {
+					"DatawarehouseName": {
+						"type": "string",
+						"defaultValue": "INTERNAL_DEV_WLAD"
+					}
+				},
+				"annotations": [],
+				"type": "Snowflake",
+				"typeProperties": {
+					"authenticationType": "Basic",
+					"connectionString": "[parameters('ls_sf_dev_wlad_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_sftp_dev_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"Username": {
+						"type": "string",
+						"defaultValue": "clearboxretail"
+					},
+					"DataWarehouseName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Sftp",
+				"typeProperties": {
+					"host": "[parameters('ls_sftp_dev_wlad_properties_typeProperties_host')]",
+					"port": 22,
+					"skipHostKeyValidation": true,
+					"authenticationType": "SshPublicKey",
+					"userName": "[parameters('ls_sftp_dev_wlad_properties_typeProperties_userName')]",
+					"privateKeyContent": {
+						"type": "SecureString",
+						"value": "[parameters('ls_sftp_dev_wlad_privateKeyContent')]"
+					},
+					"passPhrase": {
+						"type": "SecureString",
+						"value": "[parameters('ls_sftp_dev_wlad_passPhrase')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_sqls_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "SqlServer",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_sqls_wlad_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_table_dev_wlad')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureTableStorage",
+				"typeProperties": {
+					"sasUri": "[parameters('ls_table_dev_wlad_sasUri')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ETL Create Logs')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "set elt_uuid",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "elt_uuid",
+							"value": {
+								"value": "@if(\n  or(\n    empty(coalesce(pipeline().parameters.uuid,'')),\n    less(length(pipeline().parameters.uuid),32)\n  ),\n  guid('N'),\n  pipeline().parameters.uuid\n)\n\n",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "If uuid is empty",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "set elt_uuid",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@or(\nempty(coalesce(pipeline().parameters.uuid,'')),\nless(length(pipeline().parameters.uuid),32)\n)",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Update ingestion",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "ls_sf_dev_wlad",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"parameters": [
+													{
+														"name": "source_size",
+														"type": "Int32",
+														"value": "0",
+														"direction": "Input"
+													},
+													{
+														"name": "rowsRead",
+														"type": "Int16",
+														"value": {
+															"value": "@pipeline().parameters.rows_read",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "128"
+													},
+													{
+														"name": "rowsCopied",
+														"type": "Int16",
+														"value": {
+															"value": "@pipeline().parameters.rows_copied",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "first_error",
+														"type": "String",
+														"value": "No",
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "errors_seen",
+														"type": "Int16",
+														"value": {
+															"value": "@pipeline().parameters.errors_seen",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "status",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.status",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "512"
+													},
+													{
+														"name": "elt_uuid",
+														"type": "String",
+														"value": {
+															"value": "@variables('elt_uuid')",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													}
+												],
+												"type": "NonQuery",
+												"text": "update ingest.Logging set \n  source_size = ?,\n  rows_parsed = ?,\n  rows_loaded = ?,\n  first_error = ?,\n  errors_seen = ?,\n  status = ?\nwhere uuid = to_binary(?,'hex')"
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Create ingestion",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "ls_sf_dev_wlad",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"DatawarehouseName": "INTERNAL_DEV_WLAD"
+										}
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"parameters": [
+													{
+														"name": "elt_uuid",
+														"type": "String",
+														"value": {
+															"value": "@variables('elt_uuid')",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "local_file",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.local_file",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "128"
+													},
+													{
+														"name": "blob_file",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.blob_file",
+															"type": "Expression"
+														},
+														"direction": "Input"
+													},
+													{
+														"name": "tenant_code",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.tenant_code",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "datasource_code",
+														"type": "String",
+														"value": {
+															"value": "@coalesce(\n    pipeline().parameters.datasource,\n    pipeline().parameters.tenant_code\n)",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "dest_schema",
+														"type": "String",
+														"value": {
+															"value": "@coalesce(\n    pipeline().parameters.dest_schema,\n    json(variables('cfg')).datastore.schema\n)",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "dest_table",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.dest_table",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "32"
+													},
+													{
+														"name": "remarks",
+														"type": "String",
+														"value": {
+															"value": "@pipeline().parameters.remarks",
+															"type": "Expression"
+														},
+														"direction": "Input",
+														"size": "512"
+													},
+													{
+														"name": "attr",
+														"type": "String",
+														"value": {
+															"value": "@string(pipeline().parameters.attr)",
+															"type": "Expression"
+														},
+														"direction": "Input"
+													},
+													{
+														"name": "run_id",
+														"type": "String",
+														"value": {
+															"value": "@pipeline()?.TriggeredByPipelineRunId",
+															"type": "Expression"
+														},
+														"direction": "Input"
+													},
+													{
+														"name": "pipeline_name",
+														"type": "String",
+														"value": {
+															"value": "@pipeline()?.TriggeredByPipelineName",
+															"type": "Expression"
+														},
+														"direction": "Input"
+													}
+												],
+												"type": "NonQuery",
+												"text": "insert into app.INGEST (uuid, start_time, status, username, host, local_file, blob_file, tenant_code, datasource_code, dest_schema, dest_table, remarks, attr)\n  select to_binary(?,'hex'),\n  current_timestamp,'INIT','ADF','-',\n  ?,\n  ?,\n  ?,\n  ?,\n  ?,\n  ?,\n  ?, \nobject_insert(object_insert(coalesce(try_parse_json(?),object_construct()), 'ADF.TriggeredByPipelineRunId',?),'ADF.TriggeredByPipelineName',?)"
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Set output",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "If uuid is empty",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "pipelineReturnValue",
+							"value": [
+								{
+									"key": "uuid",
+									"value": {
+										"type": "Expression",
+										"content": "@variables('elt_uuid')"
+									}
+								}
+							],
+							"setSystemVariable": true
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"blob_file": {
+						"type": "string"
+					},
+					"local_file": {
+						"type": "string"
+					},
+					"tenant_code": {
+						"type": "string"
+					},
+					"slot": {
+						"type": "string",
+						"defaultValue": "prod"
+					},
+					"datasource": {
+						"type": "string"
+					},
+					"uuid": {
+						"type": "string"
+					},
+					"dest_table": {
+						"type": "string"
+					},
+					"dest_schema": {
+						"type": "string"
+					},
+					"attr": {
+						"type": "string"
+					},
+					"sf_copy_stats": {
+						"type": "array",
+						"defaultValue": []
+					},
+					"sf_copy_output": {
+						"type": "object"
+					},
+					"remarks": {
+						"type": "string"
+					},
+					"status": {
+						"type": "string"
+					},
+					"rows_read": {
+						"type": "string"
+					},
+					"rows_copied": {
+						"type": "string"
+					},
+					"errors_seen": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"elt_uuid": {
+						"type": "String",
+						"defaultValue": "00000000000000000000000000000000"
+					},
+					"subscription_id": {
+						"type": "String",
+						"defaultValue": "6a4c5e4b-460f-458a-8296-f42254574265"
+					},
+					"app_config": {
+						"type": "Array",
+						"defaultValue": []
+					},
+					"cfg": {
+						"type": "String",
+						"defaultValue": "{}"
+					},
+					"fileinfo": {
+						"type": "Array",
+						"defaultValue": []
+					},
+					"sf_copy_stats": {
+						"type": "Array",
+						"defaultValue": []
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-16T17:14:01Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sf_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dataset_Questions_JSON')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Edgewell"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "202311250845.json",
+						"container": "jsonloadtest"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"ALERT_ID": {
+							"type": "string"
+						},
+						"ALERT_DATE": {
+							"type": "string"
+						},
+						"DATE": {
+							"type": "string"
+						},
+						"SKU_CODE": {
+							"type": "string"
+						},
+						"SKU_DESCRIPTION": {
+							"type": "string"
+						},
+						"RETAILER": {
+							"type": "string"
+						},
+						"STORE_ID": {
+							"type": "string"
+						},
+						"STORE_DESCRIPTION": {
+							"type": "string"
+						},
+						"LOST_OPP": {
+							"type": "string"
+						},
+						"ROOTCAUSE": {
+							"type": "string"
+						},
+						"STORE_STOCK": {
+							"type": "string"
+						},
+						"NO_OF_DAYS_WITH_ISSUE": {
+							"type": "string"
+						},
+						"CUMM_LOST_OPP": {
+							"type": "string"
+						},
+						"CALL_DATE": {
+							"type": "string"
+						},
+						"CALL_ID": {
+							"type": "integer"
+						},
+						"Did you fix the issue?": {
+							"type": "string"
+						},
+						"please select all actions taken to fix the issue.": {
+							"type": "string"
+						},
+						"Did you complete any other actions for the SKU?": {
+							"type": "string"
+						},
+						"How many individual units have been merchandised in total for this SKU?": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dataset_Tactical_Edgewell_JSON')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Edgewell"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "tactical-edgewell-tesco-tactical-blitz-phase-1-2023-1112023-3112023-20231114160010.json",
+						"container": "jsonloadtest"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "integer"
+						},
+						"date": {
+							"type": "string"
+						},
+						"sku_id": {
+							"type": "integer"
+						},
+						"sku_description": {
+							"type": "string"
+						},
+						"sku_code": {
+							"type": "string"
+						},
+						"sku_ean": {
+							"type": "string"
+						},
+						"client": {
+							"type": "string"
+						},
+						"sub_call": {
+							"type": "string"
+						},
+						"retailer": {
+							"type": "string"
+						},
+						"store_id": {
+							"type": "string"
+						},
+						"store_description": {
+							"type": "string"
+						},
+						"call_date": {
+							"type": "string"
+						},
+						"call_id": {
+							"type": "integer"
+						},
+						"question": {
+							"type": "string"
+						},
+						"response": {
+							"type": "string"
+						},
+						"additional_info": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/FileMover')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_file_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"DataWarehouseName": {
+						"type": "string"
+					},
+					"InOrOut": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureFileStorageLocation",
+						"folderPath": {
+							"value": "@concat('Import/',dataset().DataWarehouseName,'/', dataset().InOrOut, '/')",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_file_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/KraftHeinzAPITest_Dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_table_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "API Management"
+				},
+				"annotations": [],
+				"type": "AzureTable",
+				"schema": [],
+				"typeProperties": {
+					"tableName": "KraftHeinzAPITestNew"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_table_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/KraftHeinzAPI_CSDB_Dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_csdb_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "API Management"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {},
+				"typeProperties": {
+					"collectionName": "ItemsFull"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_csdb_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MoviesD2_fixed')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "AutoCSVDebug"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "myfile123.csv",
+						"folderPath": "output/mydataflow123partfiles",
+						"container": "mycontainer"
+					},
+					"columnDelimiter": "",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceBlobCSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"FileName": {
+						"type": "string",
+						"defaultValue": "Heinz Select App Data Sample.csv"
+					}
+				},
+				"folder": {
+					"name": "API Management"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"container": "apikhtest"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceBlobCSVNoDelimiter')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"FileName": {
+						"type": "string",
+						"defaultValue": "Heinz Select App Data Sample.csv"
+					}
+				},
+				"folder": {
+					"name": "API Management"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"container": "apikhtest"
+					},
+					"columnDelimiter": "",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_wlad')]"
+			]
+		}
+	]
+}
