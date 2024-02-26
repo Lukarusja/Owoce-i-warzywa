@@ -1,0 +1,27 @@
+{
+	"name": "MoviesD2_fixed",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blob_dev_wlad",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "AutoCSVDebug"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "myfile123.csv",
+				"folderPath": "output/mydataflow123partfiles",
+				"container": "mycontainer"
+			},
+			"columnDelimiter": "",
+			"escapeChar": "\\",
+			"firstRowAsHeader": false,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
