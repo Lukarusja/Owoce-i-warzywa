@@ -10064,7 +10064,7 @@
 						"     startAt: 1L,",
 						"     stepValue: 1L) ~> surrogateKey1",
 						"surrogateKey1 filter(rownum == 5) ~> filter1",
-						"filter1 derive(delimeter = 'Delimiter: '+toString(regexExtract({_col0_},'([!$`~%^,|\\t|;|,])',1))) ~> derivedColumn1",
+						"filter1 derive(delimeter = 'Delimiter:'+toString(regexExtract({_col0_},'([!$`~%^,|\\t|;|,])',1))) ~> derivedColumn1",
 						"source1 derive({_col0_} = toString(byName('_col0_'))) ~> derivedColumn2",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
