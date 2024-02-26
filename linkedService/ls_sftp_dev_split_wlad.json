@@ -1,0 +1,37 @@
+{
+	"name": "ls_sftp_dev_split_wlad",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"Hostname": {
+				"type": "string"
+			},
+			"Username": {
+				"type": "string"
+			},
+			"SecretName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Sftp",
+		"typeProperties": {
+			"host": "@{linkedService().Hostname}",
+			"port": 22,
+			"skipHostKeyValidation": true,
+			"authenticationType": "SshPublicKey",
+			"userName": "@{linkedService().Username}",
+			"privateKeyContent": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "kv_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().SecretName",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}

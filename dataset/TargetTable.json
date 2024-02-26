@@ -1,0 +1,41 @@
+{
+	"name": "TargetTable",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sf_dev_wlad",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"DatawarehouseName": {
+					"value": "@dataset().DatawarehouseName",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"TableName": {
+				"type": "string"
+			},
+			"SchemaName": {
+				"type": "string"
+			},
+			"DatawarehouseName": {
+				"type": "string",
+				"defaultValue": "INTERNAL_DEV_WLAD"
+			}
+		},
+		"annotations": [],
+		"type": "SnowflakeTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().SchemaName",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

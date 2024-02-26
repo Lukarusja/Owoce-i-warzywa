@@ -1,0 +1,518 @@
+{
+	"name": "DiffRG ETL Generic Copy JSON",
+	"properties": {
+		"activities": [
+			{
+				"name": "Move File to Processed",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Update Log",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureFileStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "Import/InProcess",
+							"wildcardFileName": {
+								"value": "@pipeline().parameters.Filename",
+								"type": "Expression"
+							},
+							"deleteFilesAfterCompletion": true
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureFileStorageWriteSettings",
+							"copyBehavior": "PreserveHierarchy"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DiffRG_FileMover",
+						"type": "DatasetReference",
+						"parameters": {
+							"InOrOut": "InProcess",
+							"StorageAccountName": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DiffRG_FileMover",
+						"type": "DatasetReference",
+						"parameters": {
+							"InOrOut": "Processed",
+							"StorageAccountName": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Fail",
+				"type": "Fail",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline Generate Column Mapping",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"message": "Failed to connect to Storage Account or File Does Not Exist",
+					"errorCode": "556"
+				}
+			},
+			{
+				"name": "Create Initial Log",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline Generate Column Mapping",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DiffRG ETL Create Logs",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"local_file": {
+							"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
+							"type": "Expression"
+						},
+						"tenant_code": {
+							"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+							"type": "Expression"
+						},
+						"slot": {
+							"value": "@pipeline().parameters.Slot",
+							"type": "Expression"
+						},
+						"datasource": "tesco",
+						"dest_schema": "INGESTION",
+						"attr": "{}",
+						"status": "Loading",
+						"cfg": {
+							"value": "@pipeline().parameters.cfg",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Execute Pipeline Generate Column Mapping",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DiffRG ETL Generic Generate Column Mapping Two Step",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"DataWarehouseName": {
+							"value": "@pipeline().parameters.DataWarehouseName",
+							"type": "Expression"
+						},
+						"FilenamePattern": {
+							"value": "@pipeline().parameters.Filename",
+							"type": "Expression"
+						},
+						"StorageAccountName": {
+							"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+							"type": "Expression"
+						},
+						"FileShare": {
+							"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+							"type": "Expression"
+						},
+						"KVStorageAccKey": {
+							"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Copy data from Source to Ingest",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Create Initial Log",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureFileStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "Import/InProcess",
+							"wildcardFileName": {
+								"value": "@pipeline().parameters.Filename",
+								"type": "Expression"
+							},
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "SnowflakeSink",
+						"importSettings": {
+							"type": "SnowflakeImportCopyCommand"
+						}
+					},
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "ls_blob_dev_split_wlad",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"KVSasUrl": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+									"type": "Expression"
+								}
+							}
+						},
+						"path": "stagingjson"
+					},
+					"translator": {
+						"value": "@activity('Execute Pipeline Generate Column Mapping').output.pipelineReturnValue.ColumnMappingString",
+						"type": "Expression"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DiffRG_SourceFileJSON",
+						"type": "DatasetReference",
+						"parameters": {
+							"StorageAccountName": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DiffRG_TargetTable",
+						"type": "DatasetReference",
+						"parameters": {
+							"TableName": {
+								"value": "@if(startswith(pipeline().parameters.Filename, 'tactical'),json(pipeline().parameters.cfg).datastore.tablename_tactical , json(pipeline().parameters.cfg).datastore.tablename_reports )",
+								"type": "Expression"
+							},
+							"SchemaName": {
+								"value": "@json(pipeline().parameters.cfg).datastore.schema",
+								"type": "Expression"
+							},
+							"DatawarehouseName": {
+								"value": "@json(pipeline().parameters.cfg).datastore.database",
+								"type": "Expression"
+							},
+							"AccountName": {
+								"value": "@json(pipeline().parameters.cfg).datastore.account",
+								"type": "Expression"
+							},
+							"Username": {
+								"value": "@json(pipeline().parameters.cfg).datastore.username",
+								"type": "Expression"
+							},
+							"Database": {
+								"value": "@json(pipeline().parameters.cfg).datastore.database",
+								"type": "Expression"
+							},
+							"Warehouse": {
+								"value": "@json(pipeline().parameters.cfg).datastore.warehouse",
+								"type": "Expression"
+							},
+							"Password": {
+								"value": "@json(pipeline().parameters.cfg).datastore.password_kv",
+								"type": "Expression"
+							},
+							"Role": {
+								"value": "@json(pipeline().parameters.cfg).datastore.role",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Update Log",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy data from Source to Ingest",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DiffRG ETL Create Logs",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"local_file": {
+							"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
+							"type": "Expression"
+						},
+						"tenant_code": {
+							"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+							"type": "Expression"
+						},
+						"slot": {
+							"value": "@pipeline().parameters.Slot",
+							"type": "Expression"
+						},
+						"datasource": "tesco",
+						"uuid": {
+							"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
+							"type": "Expression"
+						},
+						"dest_table": {
+							"value": "@if(startswith(pipeline().parameters.Filename, 'tactical'),json(pipeline().parameters.cfg).datastore.tablename_tactical , json(pipeline().parameters.cfg).datastore.tablename_reports )",
+							"type": "Expression"
+						},
+						"dest_schema": "INGESTION",
+						"attr": "{}",
+						"status": "OK",
+						"rows_read": {
+							"value": "@activity('Copy data from Source to Ingest').output.rowsRead",
+							"type": "Expression"
+						},
+						"rows_copied": {
+							"value": "@activity('Copy data from Source to Ingest').output.rowsCopied",
+							"type": "Expression"
+						},
+						"cfg": {
+							"value": "@pipeline().parameters.cfg",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Update Log Fail",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy data from Source to Ingest",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DiffRG ETL Create Logs",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"local_file": {
+							"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
+							"type": "Expression"
+						},
+						"tenant_code": {
+							"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+							"type": "Expression"
+						},
+						"slot": {
+							"value": "@pipeline().parameters.Slot",
+							"type": "Expression"
+						},
+						"datasource": "tesco",
+						"uuid": {
+							"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
+							"type": "Expression"
+						},
+						"dest_table": {
+							"value": "@if(startswith(pipeline().parameters.Filename, 'tactical'),json(pipeline().parameters.cfg).datastore.tablename_tactical , json(pipeline().parameters.cfg).datastore.tablename_reports )",
+							"type": "Expression"
+						},
+						"dest_schema": {
+							"value": "@json(pipeline().parameters.cfg).datastore.schema",
+							"type": "Expression"
+						},
+						"attr": "{}",
+						"status": "FAILED",
+						"rows_read": {
+							"value": "@activity('Copy data from Source to Ingest').output.rowsRead",
+							"type": "Expression"
+						},
+						"rows_copied": {
+							"value": "@activity('Copy data from Source to Ingest').output.rowsCopied",
+							"type": "Expression"
+						},
+						"cfg": {
+							"value": "@pipeline().parameters.cfg",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Copy Fail",
+				"type": "Fail",
+				"dependsOn": [
+					{
+						"activity": "Update Log Fail",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"message": "567",
+					"errorCode": "Failed to copy data from Source to Ingest"
+				}
+			}
+		],
+		"parameters": {
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Edgewell"
+			},
+			"Filename": {
+				"type": "string",
+				"defaultValue": "tactical-edgewell"
+			},
+			"Slot": {
+				"type": "string",
+				"defaultValue": "dev"
+			},
+			"cfg": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"JSON_Properties": {
+				"type": "Array"
+			},
+			"JSON_Properties_String": {
+				"type": "String"
+			},
+			"Number_of_JSON_Properties": {
+				"type": "Integer"
+			},
+			"Current_Property": {
+				"type": "Integer"
+			},
+			"Column_Mapping_String": {
+				"type": "String"
+			},
+			"Column Mapping String Helper": {
+				"type": "String"
+			},
+			"Current_Property_Helper": {
+				"type": "Integer"
+			},
+			"Helper_String": {
+				"type": "String"
+			},
+			"ReadyColumnMapping": {
+				"type": "String"
+			},
+			"cfg_sftp": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Split Into Different RGs"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-24T10:24:10Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

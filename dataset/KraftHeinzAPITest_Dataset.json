@@ -1,0 +1,19 @@
+{
+	"name": "KraftHeinzAPITest_Dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_table_dev_wlad",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "API Management"
+		},
+		"annotations": [],
+		"type": "AzureTable",
+		"schema": [],
+		"typeProperties": {
+			"tableName": "KraftHeinzAPITestNew"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

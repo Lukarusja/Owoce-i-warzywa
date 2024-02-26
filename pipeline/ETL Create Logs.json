@@ -1,0 +1,386 @@
+{
+	"name": "ETL Create Logs",
+	"properties": {
+		"activities": [
+			{
+				"name": "set elt_uuid",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "elt_uuid",
+					"value": {
+						"value": "@if(\n  or(\n    empty(coalesce(pipeline().parameters.uuid,'')),\n    less(length(pipeline().parameters.uuid),32)\n  ),\n  guid('N'),\n  pipeline().parameters.uuid\n)\n\n",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "If uuid is empty",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "set elt_uuid",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@or(\nempty(coalesce(pipeline().parameters.uuid,'')),\nless(length(pipeline().parameters.uuid),32)\n)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Update ingestion",
+							"type": "Script",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "ls_sf_dev_wlad",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"parameters": [
+											{
+												"name": "source_size",
+												"type": "Int32",
+												"value": "0",
+												"direction": "Input"
+											},
+											{
+												"name": "rowsRead",
+												"type": "Int16",
+												"value": {
+													"value": "@pipeline().parameters.rows_read",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "128"
+											},
+											{
+												"name": "rowsCopied",
+												"type": "Int16",
+												"value": {
+													"value": "@pipeline().parameters.rows_copied",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "32"
+											},
+											{
+												"name": "first_error",
+												"type": "String",
+												"value": "No",
+												"direction": "Input",
+												"size": "32"
+											},
+											{
+												"name": "errors_seen",
+												"type": "Int16",
+												"value": {
+													"value": "@pipeline().parameters.errors_seen",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "32"
+											},
+											{
+												"name": "status",
+												"type": "String",
+												"value": {
+													"value": "@pipeline().parameters.status",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "512"
+											},
+											{
+												"name": "elt_uuid",
+												"type": "String",
+												"value": {
+													"value": "@variables('elt_uuid')",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "32"
+											}
+										],
+										"type": "NonQuery",
+										"text": "update ingest.Logging set \n  source_size = ?,\n  rows_parsed = ?,\n  rows_loaded = ?,\n  first_error = ?,\n  errors_seen = ?,\n  status = ?\nwhere uuid = to_binary(?,'hex')"
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Create ingestion",
+							"type": "Script",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "ls_sf_dev_wlad",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"DatawarehouseName": "INTERNAL_DEV_WLAD"
+								}
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"parameters": [
+											{
+												"name": "elt_uuid",
+												"type": "String",
+												"value": {
+													"value": "@variables('elt_uuid')",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "32"
+											},
+											{
+												"name": "local_file",
+												"type": "String",
+												"value": {
+													"value": "@pipeline().parameters.local_file",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "128"
+											},
+											{
+												"name": "blob_file",
+												"type": "String",
+												"value": {
+													"value": "@pipeline().parameters.blob_file",
+													"type": "Expression"
+												},
+												"direction": "Input"
+											},
+											{
+												"name": "tenant_code",
+												"type": "String",
+												"value": {
+													"value": "@pipeline().parameters.tenant_code",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "32"
+											},
+											{
+												"name": "datasource_code",
+												"type": "String",
+												"value": {
+													"value": "@coalesce(\n    pipeline().parameters.datasource,\n    pipeline().parameters.tenant_code\n)",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "32"
+											},
+											{
+												"name": "dest_schema",
+												"type": "String",
+												"value": {
+													"value": "@coalesce(\n    pipeline().parameters.dest_schema,\n    json(variables('cfg')).datastore.schema\n)",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "32"
+											},
+											{
+												"name": "dest_table",
+												"type": "String",
+												"value": {
+													"value": "@pipeline().parameters.dest_table",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "32"
+											},
+											{
+												"name": "remarks",
+												"type": "String",
+												"value": {
+													"value": "@pipeline().parameters.remarks",
+													"type": "Expression"
+												},
+												"direction": "Input",
+												"size": "512"
+											},
+											{
+												"name": "attr",
+												"type": "String",
+												"value": {
+													"value": "@string(pipeline().parameters.attr)",
+													"type": "Expression"
+												},
+												"direction": "Input"
+											},
+											{
+												"name": "run_id",
+												"type": "String",
+												"value": {
+													"value": "@pipeline()?.TriggeredByPipelineRunId",
+													"type": "Expression"
+												},
+												"direction": "Input"
+											},
+											{
+												"name": "pipeline_name",
+												"type": "String",
+												"value": {
+													"value": "@pipeline()?.TriggeredByPipelineName",
+													"type": "Expression"
+												},
+												"direction": "Input"
+											}
+										],
+										"type": "NonQuery",
+										"text": "insert into app.INGEST (uuid, start_time, status, username, host, local_file, blob_file, tenant_code, datasource_code, dest_schema, dest_table, remarks, attr)\n  select to_binary(?,'hex'),\n  current_timestamp,'INIT','ADF','-',\n  ?,\n  ?,\n  ?,\n  ?,\n  ?,\n  ?,\n  ?, \nobject_insert(object_insert(coalesce(try_parse_json(?),object_construct()), 'ADF.TriggeredByPipelineRunId',?),'ADF.TriggeredByPipelineName',?)"
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Set output",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "If uuid is empty",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pipelineReturnValue",
+					"value": [
+						{
+							"key": "uuid",
+							"value": {
+								"type": "Expression",
+								"content": "@variables('elt_uuid')"
+							}
+						}
+					],
+					"setSystemVariable": true
+				}
+			}
+		],
+		"parameters": {
+			"blob_file": {
+				"type": "string"
+			},
+			"local_file": {
+				"type": "string"
+			},
+			"tenant_code": {
+				"type": "string"
+			},
+			"slot": {
+				"type": "string",
+				"defaultValue": "prod"
+			},
+			"datasource": {
+				"type": "string"
+			},
+			"uuid": {
+				"type": "string"
+			},
+			"dest_table": {
+				"type": "string"
+			},
+			"dest_schema": {
+				"type": "string"
+			},
+			"attr": {
+				"type": "string"
+			},
+			"sf_copy_stats": {
+				"type": "array",
+				"defaultValue": []
+			},
+			"sf_copy_output": {
+				"type": "object"
+			},
+			"remarks": {
+				"type": "string"
+			},
+			"status": {
+				"type": "string"
+			},
+			"rows_read": {
+				"type": "string"
+			},
+			"rows_copied": {
+				"type": "string"
+			},
+			"errors_seen": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"elt_uuid": {
+				"type": "String",
+				"defaultValue": "00000000000000000000000000000000"
+			},
+			"subscription_id": {
+				"type": "String",
+				"defaultValue": "6a4c5e4b-460f-458a-8296-f42254574265"
+			},
+			"app_config": {
+				"type": "Array",
+				"defaultValue": []
+			},
+			"cfg": {
+				"type": "String",
+				"defaultValue": "{}"
+			},
+			"fileinfo": {
+				"type": "Array",
+				"defaultValue": []
+			},
+			"sf_copy_stats": {
+				"type": "Array",
+				"defaultValue": []
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-16T17:14:01Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,436 @@
+{
+	"name": "ETL Generic Extract JSON Blob",
+	"properties": {
+		"activities": [
+			{
+				"name": "Move File to Processed",
+				"type": "Copy",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [
+					{
+						"activity": "Switch",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureFileStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/')",
+								"type": "Expression"
+							},
+							"wildcardFileName": {
+								"value": "@activity('Filter Filename').output.value[0].name",
+								"type": "Expression"
+							},
+							"deleteFilesAfterCompletion": true
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureFileStorageWriteSettings",
+							"copyBehavior": "PreserveHierarchy"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "FileMover",
+						"type": "DatasetReference",
+						"parameters": {
+							"DataWarehouseName": {
+								"value": "@pipeline().parameters.DataWarehouseName",
+								"type": "Expression"
+							},
+							"InOrOut": "InProcess"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "FileMover",
+						"type": "DatasetReference",
+						"parameters": {
+							"DataWarehouseName": {
+								"value": "@pipeline().parameters.DataWarehouseName",
+								"type": "Expression"
+							},
+							"InOrOut": "Processed"
+						}
+					}
+				]
+			},
+			{
+				"name": "Switch",
+				"type": "Switch",
+				"dependsOn": [
+					{
+						"activity": "Create Initial Log",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"on": {
+						"value": "@pipeline().parameters.DataWarehouseName",
+						"type": "Expression"
+					},
+					"cases": [
+						{
+							"value": "Edgewell",
+							"activities": [
+								{
+									"name": "Copy data from Source to Ingest",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "JsonSource",
+											"storeSettings": {
+												"type": "AzureBlobStorageReadSettings",
+												"recursive": true,
+												"wildcardFileName": {
+													"value": "@concat(pipeline().parameters.FilenamePattern, '*.json')",
+													"type": "Expression"
+												},
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "JsonReadSettings"
+											}
+										},
+										"sink": {
+											"type": "SnowflakeSink",
+											"importSettings": {
+												"type": "SnowflakeImportCopyCommand"
+											}
+										},
+										"enableStaging": true,
+										"stagingSettings": {
+											"linkedServiceName": {
+												"referenceName": "ls_blob_dev_wlad",
+												"type": "LinkedServiceReference"
+											},
+											"path": "stagingjson"
+										},
+										"translator": {
+											"value": "@activity('Execute Pipeline Generate Column Mapping').output.pipelineReturnValue.ColumnMappingString",
+											"type": "Expression"
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "SourceBlobJSON",
+											"type": "DatasetReference",
+											"parameters": {
+												"ContainerName": {
+													"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "TargetTable",
+											"type": "DatasetReference",
+											"parameters": {
+												"TableName": "RAW_TACTICAL_EDGEWELL",
+												"SchemaName": "INGEST"
+											}
+										}
+									]
+								},
+								{
+									"name": "Update Log",
+									"type": "ExecutePipeline",
+									"dependsOn": [
+										{
+											"activity": "Copy data from Source to Ingest",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "ETL Create Logs",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"blob_file": {
+												"value": "@concat(toLower(pipeline().parameters.DataWarehouseName), activity('Filter Filename').output.value[0].name)",
+												"type": "Expression"
+											},
+											"tenant_code": {
+												"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+												"type": "Expression"
+											},
+											"slot": {
+												"value": "@pipeline().parameters.Slot",
+												"type": "Expression"
+											},
+											"datasource": "tesco",
+											"uuid": {
+												"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
+												"type": "Expression"
+											},
+											"dest_table": "RAW_TACTICAL_EDGEWELL",
+											"dest_schema": "INGEST",
+											"attr": "{}",
+											"status": {
+												"value": "@activity('Copy data from Source to Ingest').output.executionDetails[0].status",
+												"type": "Expression"
+											},
+											"rows_read": {
+												"value": "@activity('Copy data from Source to Ingest').output.rowsRead",
+												"type": "Expression"
+											},
+											"rows_copied": {
+												"value": "@activity('Copy data from Source to Ingest').output.rowsCopied",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Execute Pipeline Generate Column Mapping",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "ETL Generic Generate Column Mapping Blob",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"DataWarehouseName": {
+							"value": "@pipeline().parameters.DataWarehouseName",
+							"type": "Expression"
+						},
+						"FilenamePattern": {
+							"value": "@pipeline().parameters.FilenamePattern",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Fail",
+				"type": "Fail",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline Generate Column Mapping",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"message": "Failed to connect to Storage Account or File Does Not Exist",
+					"errorCode": "556"
+				}
+			},
+			{
+				"name": "Get Metadata",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline Generate Column Mapping",
+						"dependencyConditions": [
+							"Succeeded",
+							"Skipped"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "FileMover",
+						"type": "DatasetReference",
+						"parameters": {
+							"DataWarehouseName": "Edgewell",
+							"InOrOut": "InProcess"
+						}
+					},
+					"fieldList": [
+						"itemName",
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureFileStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Filter Filename",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@and(equals(item().type,'File'),startswith(item().name, pipeline().parameters.FilenamePattern))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Create Initial Log",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Filter Filename",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "ETL Create Logs",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"blob_file": {
+							"value": "@concat(toLower(pipeline().parameters.DataWarehouseName), activity('Filter Filename').output.value[0].name)",
+							"type": "Expression"
+						},
+						"tenant_code": {
+							"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+							"type": "Expression"
+						},
+						"slot": {
+							"value": "@pipeline().parameters.Slot",
+							"type": "Expression"
+						},
+						"datasource": "tesco",
+						"dest_schema": "INGEST",
+						"attr": "{}",
+						"status": "Loading"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Edgewell"
+			},
+			"FilenamePattern": {
+				"type": "string",
+				"defaultValue": "tactical-edgewell"
+			},
+			"Slot": {
+				"type": "string",
+				"defaultValue": "dev"
+			}
+		},
+		"variables": {
+			"JSON_Properties": {
+				"type": "Array"
+			},
+			"JSON_Properties_String": {
+				"type": "String"
+			},
+			"Number_of_JSON_Properties": {
+				"type": "Integer"
+			},
+			"Current_Property": {
+				"type": "Integer"
+			},
+			"Column_Mapping_String": {
+				"type": "String"
+			},
+			"Column Mapping String Helper": {
+				"type": "String"
+			},
+			"Current_Property_Helper": {
+				"type": "Integer"
+			},
+			"Helper_String": {
+				"type": "String"
+			},
+			"ReadyColumnMapping": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Full Solution Wildcard File"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-16T17:14:02Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

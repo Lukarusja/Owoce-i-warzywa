@@ -1,0 +1,44 @@
+{
+	"name": "Logic App Test",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute Logic App",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"url": "https://prod-10.uksouth.logic.azure.com:443/workflows/78818aae79a34617bb270ea5419a9eb4/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=y1bLXuZtmJMmlJy2BDHiJqHYiCf0Jh5YE3oYTjWumcU",
+					"body": {
+						"value": "{\n\n\"FileName\": \"callreportstest.json\",\n\"DataWarehouseName\" : \"Edgewell\",\n\"StorageAccountName\": \"azuukssadevedgewellwlad\",\n\"FileShare\": \"stfs-sandbox-dev-wlad\",\n\"SecretName\": \"sa-file-sas-uri-edgewell-new\",\n\n}",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"FileName": {
+				"type": "string",
+				"defaultValue": "callreportstest.json"
+			},
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Baccardi"
+			}
+		},
+		"folder": {
+			"name": "Dev Leftovers"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-24T16:04:57Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

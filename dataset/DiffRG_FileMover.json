@@ -1,0 +1,52 @@
+{
+	"name": "DiffRG_FileMover",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_file_dev_split_wlad",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"StorageAccountName": {
+					"value": "@dataset().StorageAccountName",
+					"type": "Expression"
+				},
+				"FileShare": {
+					"value": "@dataset().FileShare",
+					"type": "Expression"
+				},
+				"KVStorageAccKey": {
+					"value": "@dataset().KVStorageAccKey",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"InOrOut": {
+				"type": "string"
+			},
+			"StorageAccountName": {
+				"type": "string"
+			},
+			"FileShare": {
+				"type": "string"
+			},
+			"KVStorageAccKey": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Split into Different RG"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureFileStorageLocation",
+				"folderPath": {
+					"value": "@concat('Import/',dataset().InOrOut, '/')",
+					"type": "Expression"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

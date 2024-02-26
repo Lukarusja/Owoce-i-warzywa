@@ -1,0 +1,59 @@
+{
+	"name": "DiffRG_SourceSFTPJSON",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sftp_dev_split_wlad",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"Hostname": {
+					"value": "@dataset().Hostname",
+					"type": "Expression"
+				},
+				"Username": {
+					"value": "@dataset().Username",
+					"type": "Expression"
+				},
+				"SecretName": {
+					"value": "@dataset().SecretName",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"Username": {
+				"type": "string",
+				"defaultValue": "clearboxretail"
+			},
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Baccardi"
+			},
+			"FilePath": {
+				"type": "string",
+				"defaultValue": "/outbound/processed"
+			},
+			"Hostname": {
+				"type": "string"
+			},
+			"SecretName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Split into Different RG"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "SftpLocation",
+				"folderPath": {
+					"value": "@dataset().FilePath",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

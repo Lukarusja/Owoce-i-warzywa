@@ -1,0 +1,322 @@
+{
+	"name": "DiffRG ETL Generic Load SFTP",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Set Variable Cfg",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DiffRG_SourceSFTPJSON",
+						"type": "DatasetReference",
+						"parameters": {
+							"Username": {
+								"value": "@json(variables('cfg_sftp')).integration.expd8.username",
+								"type": "Expression"
+							},
+							"DataWarehouseName": {
+								"value": "@pipeline().parameters.DataWarehouseName",
+								"type": "Expression"
+							},
+							"FilePath": "/outbound/processed",
+							"Hostname": {
+								"value": "@json(variables('cfg_sftp')).integration.expd8.hostname",
+								"type": "Expression"
+							},
+							"SecretName": {
+								"value": "@json(variables('cfg_sftp')).integration.expd8.secret_name",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"itemName",
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "SftpReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false,
+						"disableChunking": false
+					},
+					"formatSettings": {
+						"type": "JsonReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Filter Filename",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().type,'File')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEach File",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Filter Filename",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter Filename').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy JSON from SFTP to Azure",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "JsonSource",
+									"storeSettings": {
+										"type": "SftpReadSettings",
+										"recursive": true,
+										"wildcardFolderPath": "/outbound/processed",
+										"wildcardFileName": "tactical-bacardi-tesco-ond-shippers-2023-02102023-25122023-20231231210008.json",
+										"enablePartitionDiscovery": false,
+										"disableChunking": false
+									},
+									"formatSettings": {
+										"type": "JsonReadSettings"
+									}
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureFileStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings"
+									}
+								},
+								"enableStaging": true,
+								"stagingSettings": {
+									"linkedServiceName": {
+										"referenceName": "ls_blob_dev_wlad",
+										"type": "LinkedServiceReference"
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DiffRG_SourceSFTPJSON",
+									"type": "DatasetReference",
+									"parameters": {
+										"Username": {
+											"value": "@json(variables('cfg_sftp')).integration.expd8.username",
+											"type": "Expression"
+										},
+										"DataWarehouseName": {
+											"value": "@pipeline().parameters.DataWarehouseName",
+											"type": "Expression"
+										},
+										"FilePath": "/outbound/processed",
+										"Hostname": {
+											"value": "@json(variables('cfg_sftp')).integration.expd8.hostname",
+											"type": "Expression"
+										},
+										"SecretName": {
+											"value": "@json(variables('cfg_sftp')).integration.expd8.secret_name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DiffRG_TargetFileJSON",
+									"type": "DatasetReference",
+									"parameters": {
+										"DatawareHouseName": {
+											"value": "@pipeline().parameters.DataWarehouseName",
+											"type": "Expression"
+										},
+										"FileName": {
+											"value": "@item().name",
+											"type": "Expression"
+										},
+										"StorageAccountName": {
+											"value": "@json(variables('cfg_sftp')).storageaccount.name",
+											"type": "Expression"
+										},
+										"FileShare": {
+											"value": "@json(variables('cfg_sftp')).storageaccount.fileshare",
+											"type": "Expression"
+										},
+										"KVStorageAccKey": {
+											"value": "@json(variables('cfg_sftp')).storageaccount.KVStorageAccKey",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "If File is Tactical",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Copy JSON from SFTP to Azure",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@startswith(item().name, 'tactical')",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Execute Logic App",
+										"type": "WebActivity",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"method": "POST",
+											"url": "https://prod-10.uksouth.logic.azure.com:443/workflows/78818aae79a34617bb270ea5419a9eb4/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=y1bLXuZtmJMmlJy2BDHiJqHYiCf0Jh5YE3oYTjWumcU",
+											"body": {
+												"value": "@concat('{\n    \"FileName\": \"', item().name, '\",\n    \"DataWarehouseName\": \"', pipeline().parameters.DataWarehouseName,'\"}')",
+												"type": "Expression"
+											}
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Set Variable Cfg",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Get Cfg",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "cfg_sftp",
+					"value": {
+						"value": "@activity('Get Cfg').output.value",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Get Cfg",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": {
+						"value": "@concat('https://az-ukw-ac-dev-wlad.azconfig.io/kv/', pipeline().parameters.DataWarehouseName, '_', pipeline().parameters.Slot)",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://az-ukw-ac-dev-wlad.azconfig.io"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"Username": {
+				"type": "string",
+				"defaultValue": "edgewell"
+			},
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Edgewell"
+			},
+			"Slot": {
+				"type": "string",
+				"defaultValue": "dev"
+			}
+		},
+		"variables": {
+			"cfg_sftp": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Split Into Different RGs"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-23T19:27:11Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

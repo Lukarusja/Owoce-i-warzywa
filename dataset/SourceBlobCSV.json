@@ -1,0 +1,36 @@
+{
+	"name": "SourceBlobCSV",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blob_dev_wlad",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string",
+				"defaultValue": "Heinz Select App Data Sample.csv"
+			}
+		},
+		"folder": {
+			"name": "API Management"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
+				"container": "apikhtest"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

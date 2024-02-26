@@ -1,0 +1,238 @@
+{
+	"name": "DiffRG ETL Generic Extract JSON Two Step",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Set Variable Cfg",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DiffRG_FileMover",
+						"type": "DatasetReference",
+						"parameters": {
+							"InOrOut": "InProcess",
+							"StorageAccountName": {
+								"value": "@json(variables('cfg')).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(variables('cfg')).storageaccount.fileshare",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(variables('cfg')).storageaccount.KVStorageAccKey",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"itemName",
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureFileStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Filter Filename",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().type,'File')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEach File",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Filter Filename",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter Filename').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Execute Pipeline Copy JSON",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "DiffRG ETL Generic Copy JSON",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"DataWarehouseName": {
+										"value": "@pipeline().parameters.DataWarehouseName",
+										"type": "Expression"
+									},
+									"Filename": {
+										"value": "@item().name",
+										"type": "Expression"
+									},
+									"Slot": {
+										"value": "@pipeline().parameters.Slot",
+										"type": "Expression"
+									},
+									"cfg": {
+										"value": "@variables('cfg')",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Set Variable Cfg",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Get Cfg",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "cfg",
+					"value": {
+						"value": "@activity('Get Cfg').output.value",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Get Cfg",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": {
+						"value": "@concat('https://az-ukw-ac-dev-wlad.azconfig.io/kv/', pipeline().parameters.DataWarehouseName, '_', pipeline().parameters.Slot)",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://az-ukw-ac-dev-wlad.azconfig.io"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Edgewell"
+			},
+			"FilenamePattern": {
+				"type": "string"
+			},
+			"Slot": {
+				"type": "string",
+				"defaultValue": "dev"
+			}
+		},
+		"variables": {
+			"JSON_Properties": {
+				"type": "Array"
+			},
+			"JSON_Properties_String": {
+				"type": "String"
+			},
+			"Number_of_JSON_Properties": {
+				"type": "Integer"
+			},
+			"Current_Property": {
+				"type": "Integer"
+			},
+			"Column_Mapping_String": {
+				"type": "String"
+			},
+			"Column Mapping String Helper": {
+				"type": "String"
+			},
+			"Current_Property_Helper": {
+				"type": "Integer"
+			},
+			"Helper_String": {
+				"type": "String"
+			},
+			"ReadyColumnMapping": {
+				"type": "String"
+			},
+			"cfg": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Split Into Different RGs"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-23T17:53:48Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

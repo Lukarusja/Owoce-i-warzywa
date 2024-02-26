@@ -1,0 +1,12 @@
+{
+	"name": "ls_table_dev_wlad",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureTableStorage",
+		"typeProperties": {
+			"sasUri": "https://azuukssadevedgewellwlad.table.core.windows.net/",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDkxMTY0ODdGLUU1RDgtNDIzRC04ODZFLUIyOTU1MkMwOEJGQl9kNmFkMWE1ZC0xMDliLTQ0YmEtYjY1OS1kMTczMDI4N2JjNWYiDQp9"
+		}
+	}
+}

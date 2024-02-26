@@ -1,0 +1,75 @@
+{
+	"name": "Dataset_Tactical_Edgewell_JSON",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blob_dev_wlad",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Edgewell"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "tactical-edgewell-tesco-tactical-blitz-phase-1-2023-1112023-3112023-20231114160010.json",
+				"container": "jsonloadtest"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"type": "integer"
+				},
+				"date": {
+					"type": "string"
+				},
+				"sku_id": {
+					"type": "integer"
+				},
+				"sku_description": {
+					"type": "string"
+				},
+				"sku_code": {
+					"type": "string"
+				},
+				"sku_ean": {
+					"type": "string"
+				},
+				"client": {
+					"type": "string"
+				},
+				"sub_call": {
+					"type": "string"
+				},
+				"retailer": {
+					"type": "string"
+				},
+				"store_id": {
+					"type": "string"
+				},
+				"store_description": {
+					"type": "string"
+				},
+				"call_date": {
+					"type": "string"
+				},
+				"call_id": {
+					"type": "integer"
+				},
+				"question": {
+					"type": "string"
+				},
+				"response": {
+					"type": "string"
+				},
+				"additional_info": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

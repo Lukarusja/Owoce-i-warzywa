@@ -1,0 +1,45 @@
+{
+	"name": "ETL Baccardi",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute Pipeline Generic Extract JSON",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "ETL Generic Extract JSON Debug",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"DataWarehouseName": {
+							"value": "@pipeline().parameters.DataWarehouseName",
+							"type": "Expression"
+						},
+						"FilenamePattern": {
+							"value": "@pipeline().parameters.FilenamePattern",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Baccardi"
+			},
+			"FilenamePattern": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-22T15:21:46Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,450 @@
+{
+	"name": "ETL Generic Generate Column Mapping Blob",
+	"properties": {
+		"activities": [
+			{
+				"name": "Failed To Connect",
+				"type": "Fail",
+				"dependsOn": [
+					{
+						"activity": "Lookup JSON",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"message": "Failed to connect to Storage Account",
+					"errorCode": "555"
+				}
+			},
+			{
+				"name": "Lookup JSON",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFileName": {
+								"value": "@concat(pipeline().parameters.FilenamePattern, '*.json')",
+								"type": "Expression"
+							},
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "SourceBlobJSON",
+						"type": "DatasetReference",
+						"parameters": {
+							"ContainerName": {
+								"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			},
+			{
+				"name": "If File Exists",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Lookup JSON",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@bool(contains(activity('Lookup JSON').output, 'firstRow'))",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "File Not Found",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": "File Not Found",
+								"errorCode": "554"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Convert JSON_Properties String to Array",
+				"description": "Contains an array of properties in JSON returned by the previous step",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Clean Up JSON Properties String",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "JSON_Properties",
+					"value": {
+						"value": "@split(variables('Helper_String'), '^')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Until",
+				"type": "Until",
+				"dependsOn": [
+					{
+						"activity": "Set Column Mapping String",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(variables('Current_Property'), sub(variables('Number_of_JSON_Properties'), 1))",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Append Column Mapping String",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Set Column Mapping String Helper",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Column_Mapping_String",
+								"value": {
+									"value": "@variables('Column Mapping String Helper')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set Column Mapping String Helper",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Column Mapping String Helper",
+								"value": {
+									"value": "@concat(variables('Column_Mapping_String'),'{\"source\": {\"name\": \"', variables('JSON_Properties')[variables('Current_Property')], '\"},\"target\":{\"name\":\"', variables('JSON_Properties')[variables('Current_Property')], '\"}},')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set Current Property Helper",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Append Column Mapping String",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Current_Property_Helper",
+								"value": {
+									"value": "@add(variables('Current_Property'),2)",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set Current Property",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Set Current Property Helper",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Current_Property",
+								"value": {
+									"value": "@variables('Current_Property_Helper')",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"timeout": "0.12:00:00"
+				}
+			},
+			{
+				"name": "Set Number of JSON Properties",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Convert JSON_Properties String to Array",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Number_of_JSON_Properties",
+					"value": {
+						"value": "@length(variables('JSON_Properties'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set Current_Property",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Convert JSON_Properties String to Array",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Current_Property",
+					"value": 0
+				}
+			},
+			{
+				"name": "Set Column Mapping String",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set Current_Property",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set Number of JSON Properties",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Column_Mapping_String",
+					"value": "{\n  \"type\": \"TabularTranslator\",\n  \"mappings\": ["
+				}
+			},
+			{
+				"name": "Clean Up Column Mapping String",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Until",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Column Mapping String Helper",
+					"value": {
+						"value": "@substring(variables('Column_Mapping_String'), 0, sub(length(variables('Column_Mapping_String')), 1))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Finalize Column Mapping String",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Clean Up Column Mapping String",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pipelineReturnValue",
+					"value": [
+						{
+							"key": "ColumnMappingString",
+							"value": {
+								"type": "Expression",
+								"content": "@concat(variables('Column Mapping String Helper'), ']}')"
+							}
+						}
+					],
+					"setSystemVariable": true
+				}
+			},
+			{
+				"name": "Set JSON Properties String",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "If File Exists",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "JSON_Properties_String",
+					"value": {
+						"value": "@string(activity('Lookup JSON').output.firstRow)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Clean Up JSON Properties String",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set JSON Properties String",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Helper_String",
+					"value": {
+						"value": "@replace(replace(replace(replace(replace(replace(replace(replace(variables('JSON_Properties_String'), '/', ''), '\":', '^'), '\"', ''), ' ,', '---'), ',', '^'), '---', ' ,'), '{', ''), '}', '')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Edgewell"
+			},
+			"FilenamePattern": {
+				"type": "string",
+				"defaultValue": "tactical-edgewell"
+			}
+		},
+		"variables": {
+			"JSON_Properties": {
+				"type": "Array"
+			},
+			"JSON_Properties_String": {
+				"type": "String"
+			},
+			"Number_of_JSON_Properties": {
+				"type": "Integer"
+			},
+			"Current_Property": {
+				"type": "Integer"
+			},
+			"Column_Mapping_String": {
+				"type": "String"
+			},
+			"Column Mapping String Helper": {
+				"type": "String"
+			},
+			"Current_Property_Helper": {
+				"type": "Integer"
+			},
+			"Helper_String": {
+				"type": "String"
+			},
+			"ReadyColumnMapping": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Full Solution Wildcard File"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-15T15:58:39Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,131 @@
+{
+	"name": "API Management KH Test",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureFileStorageWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "SourceBlobCSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"FileName": "Heinz Select API Outlets List 20240202_pipesall.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DiffRG_TargetFileJSON",
+						"type": "DatasetReference",
+						"parameters": {
+							"DatawareHouseName": "test",
+							"FileName": "outputFull.json",
+							"StorageAccountName": "azuukssadevedgewellwlad",
+							"FileShare": "stfs-sandbox-dev-wlad",
+							"KVStorageAccKey": "sa-access-key-edgewell-new"
+						}
+					}
+				]
+			},
+			{
+				"name": "Copy data2",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Copy data1",
+						"dependencyConditions": [
+							"Succeeded",
+							"Skipped"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureFileStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "CosmosDbSqlApiSink",
+						"writeBehavior": "insert"
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DiffRG_TargetFileJSON",
+						"type": "DatasetReference",
+						"parameters": {
+							"DatawareHouseName": "test",
+							"FileName": "outputFull.json",
+							"StorageAccountName": "azuukssadevedgewellwlad",
+							"FileShare": "stfs-sandbox-dev-wlad",
+							"KVStorageAccKey": "sa-access-key-edgewell-new"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "KraftHeinzAPI_CSDB_Dataset",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "Dev Leftovers"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-02-05T15:42:15Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

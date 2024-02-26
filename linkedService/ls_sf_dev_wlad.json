@@ -1,0 +1,20 @@
+{
+	"name": "ls_sf_dev_wlad",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "Linked Service to INTERNAL_DEV_WLAD database",
+		"parameters": {
+			"DatawarehouseName": {
+				"type": "string",
+				"defaultValue": "INTERNAL_DEV_WLAD"
+			}
+		},
+		"annotations": [],
+		"type": "Snowflake",
+		"typeProperties": {
+			"authenticationType": "Basic",
+			"connectionString": "jdbc:snowflake://clearboxretail-demo.snowflakecomputing.com/?user=wbielski&db=@{linkedService().DatawarehouseName}&warehouse=CLEARBOX_DEV_LOAD&role=DATA_ENGINEER",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDkxMTY0ODdGLUU1RDgtNDIzRC04ODZFLUIyOTU1MkMwOEJGQl9lZWRmMDY4ZS1kMzExLTQwMDAtYTdlOS0wZWM5YzFkODBmNjciDQp9"
+		}
+	}
+}

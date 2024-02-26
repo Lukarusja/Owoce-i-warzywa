@@ -1,0 +1,9 @@
+{
+	"name": "azu-ukw-df-dev-sandbox-wlad",
+	"location": "uksouth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "1f56fa09-d45b-470f-b99f-1ac5f7cc2d42",
+		"tenantId": "4c779e37-0662-47df-9399-4ff5cc58a891"
+	}
+}

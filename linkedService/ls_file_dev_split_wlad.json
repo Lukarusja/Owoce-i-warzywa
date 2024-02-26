@@ -1,0 +1,37 @@
+{
+	"name": "ls_file_dev_split_wlad",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"StorageAccountName": {
+				"type": "string",
+				"defaultValue": "azuukwstdevsandboxwlad"
+			},
+			"FileShare": {
+				"type": "string",
+				"defaultValue": "stfs-sandbox-dev-wlad"
+			},
+			"KVStorageAccKey": {
+				"type": "string",
+				"defaultValue": "sa-access-key-edgewell"
+			}
+		},
+		"annotations": [],
+		"type": "AzureFileStorage",
+		"typeProperties": {
+			"connectionString": "DefaultEndpointsProtocol=https;AccountName=@{linkedService().StorageAccountName};EndpointSuffix=core.windows.net;",
+			"accountKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "kv_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().KVStorageAccKey",
+					"type": "Expression"
+				}
+			},
+			"fileShare": "@{linkedService().FileShare}"
+		}
+	}
+}

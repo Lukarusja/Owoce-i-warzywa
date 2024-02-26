@@ -1,0 +1,97 @@
+{
+	"name": "SqlServerTable1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sqls_wlad",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Edgewell"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [
+			{
+				"name": "ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "DATE",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "SKU_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "SKU_DESCRIPTION",
+				"type": "varchar"
+			},
+			{
+				"name": "SKU_CODE",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "SKU_EAN",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "CLIENT",
+				"type": "varchar"
+			},
+			{
+				"name": "SUB_CALL",
+				"type": "varchar"
+			},
+			{
+				"name": "RETAILER",
+				"type": "varchar"
+			},
+			{
+				"name": "STORE_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "STORE_DESCRIPTION",
+				"type": "varchar"
+			},
+			{
+				"name": "CALL_DATE",
+				"type": "date"
+			},
+			{
+				"name": "CALL_ID",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "QUESTION",
+				"type": "varchar"
+			},
+			{
+				"name": "RESPONSE",
+				"type": "varchar"
+			},
+			{
+				"name": "ADDITIONAL_INFO",
+				"type": "varchar"
+			},
+			{
+				"name": "ETL_UUID",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "INGEST",
+			"table": "RAW_TACTICAL_EDGEWELL_WITHETLUUID"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

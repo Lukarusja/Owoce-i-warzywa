@@ -1,0 +1,46 @@
+{
+	"name": "SourceSFTPJSON",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sftp_dev_wlad",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"Username": {
+					"value": "@dataset().Username",
+					"type": "Expression"
+				},
+				"DataWarehouseName": {
+					"value": "@dataset().DataWarehouseName",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"Username": {
+				"type": "string",
+				"defaultValue": "clearboxretail"
+			},
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Baccardi"
+			},
+			"FilePath": {
+				"type": "string",
+				"defaultValue": "/outbound/processed"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "SftpLocation",
+				"folderPath": {
+					"value": "@dataset().FilePath",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

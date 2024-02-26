@@ -1,0 +1,163 @@
+{
+	"name": "ETL Generic Extract JSON Two Step",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "FileMover",
+						"type": "DatasetReference",
+						"parameters": {
+							"DataWarehouseName": "Edgewell",
+							"InOrOut": "InProcess"
+						}
+					},
+					"fieldList": [
+						"itemName",
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureFileStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Filter Filename",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(item().type,'File')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "ForEach File",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Filter Filename",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter Filename').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Execute Pipeline Copy JSON",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "ETL Generic Copy JSON",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"DataWarehouseName": {
+										"value": "@pipeline().parameters.DataWarehouseName",
+										"type": "Expression"
+									},
+									"Filename": {
+										"value": "@item().name",
+										"type": "Expression"
+									},
+									"Slot": {
+										"value": "@pipeline().parameters.Slot",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Edgewell"
+			},
+			"FilenamePattern": {
+				"type": "string",
+				"defaultValue": "tactical-edgewell"
+			},
+			"Slot": {
+				"type": "string",
+				"defaultValue": "dev"
+			}
+		},
+		"variables": {
+			"JSON_Properties": {
+				"type": "Array"
+			},
+			"JSON_Properties_String": {
+				"type": "String"
+			},
+			"Number_of_JSON_Properties": {
+				"type": "Integer"
+			},
+			"Current_Property": {
+				"type": "Integer"
+			},
+			"Column_Mapping_String": {
+				"type": "String"
+			},
+			"Column Mapping String Helper": {
+				"type": "String"
+			},
+			"Current_Property_Helper": {
+				"type": "Integer"
+			},
+			"Helper_String": {
+				"type": "String"
+			},
+			"ReadyColumnMapping": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-15T17:00:11Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

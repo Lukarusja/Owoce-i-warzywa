@@ -1,0 +1,29 @@
+{
+	"name": "FileMover",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_file_dev_wlad",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"DataWarehouseName": {
+				"type": "string"
+			},
+			"InOrOut": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureFileStorageLocation",
+				"folderPath": {
+					"value": "@concat('Import/',dataset().DataWarehouseName,'/', dataset().InOrOut, '/')",
+					"type": "Expression"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,84 @@
+{
+	"name": "Dataset_Questions_JSON",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blob_dev_wlad",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Edgewell"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "202311250845.json",
+				"container": "jsonloadtest"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"ALERT_ID": {
+					"type": "string"
+				},
+				"ALERT_DATE": {
+					"type": "string"
+				},
+				"DATE": {
+					"type": "string"
+				},
+				"SKU_CODE": {
+					"type": "string"
+				},
+				"SKU_DESCRIPTION": {
+					"type": "string"
+				},
+				"RETAILER": {
+					"type": "string"
+				},
+				"STORE_ID": {
+					"type": "string"
+				},
+				"STORE_DESCRIPTION": {
+					"type": "string"
+				},
+				"LOST_OPP": {
+					"type": "string"
+				},
+				"ROOTCAUSE": {
+					"type": "string"
+				},
+				"STORE_STOCK": {
+					"type": "string"
+				},
+				"NO_OF_DAYS_WITH_ISSUE": {
+					"type": "string"
+				},
+				"CUMM_LOST_OPP": {
+					"type": "string"
+				},
+				"CALL_DATE": {
+					"type": "string"
+				},
+				"CALL_ID": {
+					"type": "integer"
+				},
+				"Did you fix the issue?": {
+					"type": "string"
+				},
+				"please select all actions taken to fix the issue.": {
+					"type": "string"
+				},
+				"Did you complete any other actions for the SKU?": {
+					"type": "string"
+				},
+				"How many individual units have been merchandised in total for this SKU?": {
+					"type": "string"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

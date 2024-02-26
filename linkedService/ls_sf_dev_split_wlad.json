@@ -1,0 +1,49 @@
+{
+	"name": "ls_sf_dev_split_wlad",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"AccountName": {
+				"type": "string",
+				"defaultValue": "clearboxretail-demo"
+			},
+			"Username": {
+				"type": "string",
+				"defaultValue": "wbielski"
+			},
+			"Database": {
+				"type": "string",
+				"defaultValue": "INTERNAL_DEV_WLAD"
+			},
+			"Warehouse": {
+				"type": "string",
+				"defaultValue": "CLEARBOX_DEV_LOAD"
+			},
+			"Password": {
+				"type": "string",
+				"defaultValue": "sf-edgewell-password"
+			},
+			"Role": {
+				"type": "string",
+				"defaultValue": "LOAD_SERVICE"
+			}
+		},
+		"annotations": [],
+		"type": "Snowflake",
+		"typeProperties": {
+			"authenticationType": "Basic",
+			"connectionString": "jdbc:snowflake://@{linkedService().AccountName}.snowflakecomputing.com/?user=@{linkedService().Username}&db=@{linkedService().Database}&warehouse=@{linkedService().Warehouse}&role=@{linkedService().Role}",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "kv_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().Password",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}

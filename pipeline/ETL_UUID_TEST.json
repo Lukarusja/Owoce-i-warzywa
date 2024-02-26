@@ -1,0 +1,98 @@
+{
+	"name": "ETL_UUID_TEST",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Set variable1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"additionalColumns": [
+							{
+								"name": "ETL_UUID",
+								"value": {
+									"value": "HardcodedETLUUID",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureFileStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "Import/InProcess",
+							"wildcardFileName": "tactical-edgewell-tesco-tactical-blitz-phase-1-2023-1112023-3112023-20231114160010.json",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "SqlServerSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"value": "@variables('columnmapping')",
+						"type": "Expression"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "SourceFileJSON",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "SqlServerTable1",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "columnmapping",
+					"value": "{\n\t\"type\": \"TabularTranslator\",\n\t\"mappings\": [\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"ID\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"date\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"DATE\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"SKU_ID\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_description\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"SKU_DESCRIPTION\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_code\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"SKU_CODE\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_ean\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"SKU_EAN\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"client\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"CLIENT\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sub_call\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"SUB_CALL\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"retailer\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"RETAILER\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"store_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"STORE_ID\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"store_description\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"STORE_DESCRIPTION\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_date\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"CALL_DATE\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"CALL_ID\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"question\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"QUESTION\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"response\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"RESPONSE\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"additional_info\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"ADDITIONAL_INFO\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"ETL_UUID\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"ETL_UUID\"\n\t\t\t}\n\t\t}\n\t]\n}"
+				}
+			}
+		],
+		"variables": {
+			"columnmapping": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Dev Leftovers"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-02-15T18:15:28Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

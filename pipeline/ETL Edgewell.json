@@ -1,0 +1,82 @@
+{
+	"name": "ETL Edgewell",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute Pipeline Generic Extract JSON",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "ETL Generic Extract JSON Two Step",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"DataWarehouseName": {
+							"value": "@pipeline().parameters.DataWarehouseName",
+							"type": "Expression"
+						},
+						"FilenamePattern": {
+							"value": "@pipeline().parameters.FilenamePattern",
+							"type": "Expression"
+						},
+						"Slot": "dev"
+					}
+				}
+			},
+			{
+				"name": "Execute JSON Cleamup",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline Generic Extract JSON",
+						"dependencyConditions": [
+							"Succeeded",
+							"Skipped"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "ETL Generic JSON Cleanup",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"DataWarehouseName": {
+							"value": "@pipeline().parameters.DataWarehouseName",
+							"type": "Expression"
+						},
+						"Slot": "dev"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"DataWarehouseName": {
+				"type": "string",
+				"defaultValue": "Edgewell"
+			},
+			"FilenamePattern": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"ReadyColumnMapping": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-01-15T18:34:31Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

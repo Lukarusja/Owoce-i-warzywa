@@ -1,0 +1,82 @@
+{
+	"name": "DiffRG_TargetTable",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sf_dev_split_wlad",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"AccountName": {
+					"value": "@dataset().AccountName",
+					"type": "Expression"
+				},
+				"Username": {
+					"value": "@dataset().Username",
+					"type": "Expression"
+				},
+				"Database": {
+					"value": "@dataset().Database",
+					"type": "Expression"
+				},
+				"Warehouse": {
+					"value": "@dataset().Warehouse",
+					"type": "Expression"
+				},
+				"Password": {
+					"value": "@dataset().Password",
+					"type": "Expression"
+				},
+				"Role": {
+					"value": "@dataset().Role",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"TableName": {
+				"type": "string"
+			},
+			"SchemaName": {
+				"type": "string"
+			},
+			"DatawarehouseName": {
+				"type": "string",
+				"defaultValue": "INTERNAL_DEV_WLAD"
+			},
+			"AccountName": {
+				"type": "string"
+			},
+			"Username": {
+				"type": "string"
+			},
+			"Database": {
+				"type": "string"
+			},
+			"Warehouse": {
+				"type": "string"
+			},
+			"Password": {
+				"type": "string"
+			},
+			"Role": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Split into Different RG"
+		},
+		"annotations": [],
+		"type": "SnowflakeTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().SchemaName",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().TableName",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
