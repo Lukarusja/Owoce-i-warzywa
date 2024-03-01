@@ -3115,6 +3115,8 @@
 					{
 						"name": "Find CSV Delimiter",
 						"type": "ExecuteDataFlow",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -3168,6 +3170,8 @@
 					{
 						"name": "Find CSV Skip Count",
 						"type": "ExecuteDataFlow",
+						"state": "Inactive",
+						"onInactiveMarkAs": "Succeeded",
 						"dependsOn": [
 							{
 								"activity": "Find CSV Delimiter",
@@ -3207,7 +3211,7 @@
 									},
 									"sink1": {
 										"FileName": {
-											"value": "@string(concat('headers_', pipeline().parameters.Filename))",
+											"value": "@string(pipeline().parameters.Filename)",
 											"type": "Expression"
 										},
 										"KVSasUrl": {
@@ -11449,10 +11453,14 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "SourceBlobCSV_split",
+								"referenceName": "SourceBlobCSVNoDelimiter_split",
 								"type": "DatasetReference"
 							},
-							"name": "sink1"
+							"name": "sink1",
+							"rejectedDataLinkedService": {
+								"referenceName": "ls_blob_dev_wlad",
+								"type": "LinkedServiceReference"
+							}
 						}
 					],
 					"transformations": [
@@ -11499,7 +11507,7 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/SourceBlobCSVNoDelimiter_split')]",
-				"[concat(variables('factoryId'), '/datasets/SourceBlobCSV_split')]"
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_wlad')]"
 			]
 		},
 		{
@@ -11521,7 +11529,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "SourceBlobCSV_split",
+								"referenceName": "SourceBlobCSVNoDelimiter_split",
 								"type": "DatasetReference"
 							},
 							"name": "sink1"
@@ -11564,8 +11572,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/SourceBlobCSVNoDelimiter_split')]",
-				"[concat(variables('factoryId'), '/datasets/SourceBlobCSV_split')]"
+				"[concat(variables('factoryId'), '/datasets/SourceBlobCSVNoDelimiter_split')]"
 			]
 		},
 		{
