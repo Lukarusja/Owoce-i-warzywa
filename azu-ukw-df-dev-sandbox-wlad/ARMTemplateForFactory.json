@@ -3291,7 +3291,7 @@
 						"typeProperties": {
 							"variableName": "delimiter",
 							"value": {
-								"value": "@split(activity('Lookup CSV Delimiter').output.value, ':')[1]",
+								"value": "@split(activity('Lookup CSV Delimiter').output.firstRow.delimiter, ':')[1]",
 								"type": "Expression"
 							}
 						}
@@ -3362,7 +3362,7 @@
 						"typeProperties": {
 							"variableName": "SkipLineCount",
 							"value": {
-								"value": "@activity('Find CSV Skip Count').output.value",
+								"value": "@activity('Find CSV Skip Count').output.firstRow.column1",
 								"type": "Expression"
 							}
 						}
@@ -4584,7 +4584,7 @@
 					},
 					"FilenamePattern": {
 						"type": "string",
-						"defaultValue": "tactical-edgewell"
+						"defaultValue": "Edgewell_JS"
 					},
 					"Slot": {
 						"type": "string",
@@ -11444,7 +11444,8 @@
 						"source(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
-						"     skipLines: 5) ~> source1",
+						"     skipLines: 5,",
+						"     wildcardPaths:[($fileName)]) ~> source1",
 						"derivedColumn2 keyGenerate(output(rownum as long),",
 						"     startAt: 1L,",
 						"     stepValue: 1L) ~> surrogateKey1",
