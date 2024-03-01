@@ -3147,7 +3147,7 @@
 									},
 									"sink1": {
 										"FileName": {
-											"value": "@string(concat('delimiter_', pipeline().parameters.Filename))",
+											"value": "@string(pipeline().parameters.Filename)",
 											"type": "Expression"
 										},
 										"KVSasUrl": {
@@ -11368,6 +11368,27 @@
 				"type": "AzureTableStorage",
 				"typeProperties": {
 					"sasUri": "[parameters('ls_table_dev_wlad_sasUri')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ir-dataflows-dev-wlad')]",
+			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 10,
+							"cleanup": false,
+							"customProperties": []
+						}
+					}
 				}
 			},
 			"dependsOn": []

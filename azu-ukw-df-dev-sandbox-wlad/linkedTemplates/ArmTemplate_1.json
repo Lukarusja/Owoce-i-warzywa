@@ -39,6 +39,44 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/SourceBlobCSVNoDelimiter')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_wlad",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"FileName": {
+						"type": "string",
+						"defaultValue": "Heinz Select App Data Sample.csv"
+					}
+				},
+				"folder": {
+					"name": "Auto CSV Processing"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"container": "apikhtest"
+					},
+					"columnDelimiter": "",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/SourceBlobJSON')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -3334,316 +3372,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/SourceFileJSON')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ETL Generic JSON Cleanup')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Switch",
-						"type": "Switch",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"on": {
-								"value": "@pipeline().parameters.DataWarehouseName",
-								"type": "Expression"
-							},
-							"cases": [
-								{
-									"value": "Edgewell",
-									"activities": [
-										{
-											"name": "Set Column Mapping RAW_TACTICAL_EDGEWELL_TRIMMED",
-											"description": "Set Column Mapping for RAW_TACTICAL_EDGEWELL_TRIMMED",
-											"type": "SetVariable",
-											"dependsOn": [
-												{
-													"activity": "Script2",
-													"dependencyConditions": [
-														"Skipped"
-													]
-												}
-											],
-											"policy": {
-												"secureOutput": false,
-												"secureInput": false
-											},
-											"userProperties": [],
-											"typeProperties": {
-												"variableName": "Column_Mapping_String",
-												"value": "{\n\t\"type\": \"TabularTranslator\",\n\t\"mappings\": [\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"date\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"date\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_description\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_description\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_code\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_code\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sku_ean\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sku_ean\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"client\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"client\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"sub_call\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"sub_call\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"retailer\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"retailer\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"store_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"store_id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"store_description\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"store_description\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_date\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"call_date\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t}\n\t\t}\n\t]\n}"
-											}
-										},
-										{
-											"name": "Set Column Mapping TRIMMED_QUESTIONS",
-											"description": "Set Column Mapping for RAW_TACTICAL_EDGEWELL_TRIMMED_QUESTIONS",
-											"type": "SetVariable",
-											"dependsOn": [
-												{
-													"activity": "Set Column Mapping RAW_TACTICAL_EDGEWELL_TRIMMED",
-													"dependencyConditions": [
-														"Succeeded"
-													]
-												}
-											],
-											"policy": {
-												"secureOutput": false,
-												"secureInput": false
-											},
-											"userProperties": [],
-											"typeProperties": {
-												"variableName": "Column Mapping String Helper",
-												"value": "{\n\t\"type\": \"TabularTranslator\",\n\t\"mappings\": [\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"call_id\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"question\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"question\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"response\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"response\"\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"source\": {\n\t\t\t\t\"name\": \"additional_info\"\n\t\t\t},\n\t\t\t\"target\": {\n\t\t\t\t\"name\": \"additional_info\"\n\t\t\t}\n\t\t}\n\t]\n}"
-											}
-										},
-										{
-											"name": "Copy TRIMMED",
-											"type": "Copy",
-											"dependsOn": [
-												{
-													"activity": "Set Column Mapping RAW_TACTICAL_EDGEWELL_TRIMMED",
-													"dependencyConditions": [
-														"Succeeded"
-													]
-												}
-											],
-											"policy": {
-												"timeout": "0.12:00:00",
-												"retry": 0,
-												"retryIntervalInSeconds": 30,
-												"secureOutput": false,
-												"secureInput": false
-											},
-											"userProperties": [],
-											"typeProperties": {
-												"source": {
-													"type": "SnowflakeSource",
-													"query": "SELECT ID,DATE,SKU_ID ,SKU_DESCRIPTION ,SKU_CODE ,SKU_EAN ,CLIENT,SUB_CALL ,RETAILER,STORE_ID ,STORE_DESCRIPTION ,CALL_DATE,CALL_ID FROM INGEST.RAW_TACTICAL_EDGEWELL",
-													"exportSettings": {
-														"type": "SnowflakeExportCopyCommand"
-													}
-												},
-												"sink": {
-													"type": "SnowflakeSink",
-													"importSettings": {
-														"type": "SnowflakeImportCopyCommand"
-													}
-												},
-												"enableStaging": true,
-												"stagingSettings": {
-													"linkedServiceName": {
-														"referenceName": "ls_blob_dev_wlad",
-														"type": "LinkedServiceReference"
-													}
-												},
-												"translator": {
-													"value": "@variables('Column_Mapping_String')",
-													"type": "Expression"
-												}
-											},
-											"inputs": [
-												{
-													"referenceName": "TargetTable",
-													"type": "DatasetReference",
-													"parameters": {
-														"TableName": "RAW_TACTICAL_EDGEWELL",
-														"SchemaName": "INGEST"
-													}
-												}
-											],
-											"outputs": [
-												{
-													"referenceName": "TargetTable",
-													"type": "DatasetReference",
-													"parameters": {
-														"TableName": "RAW_TACTICAL_EDGEWELL_TRIMMED",
-														"SchemaName": "INGEST"
-													}
-												}
-											]
-										},
-										{
-											"name": "Copy TRIMMED_QUESTIONS",
-											"type": "Copy",
-											"dependsOn": [
-												{
-													"activity": "Set Column Mapping TRIMMED_QUESTIONS",
-													"dependencyConditions": [
-														"Succeeded"
-													]
-												}
-											],
-											"policy": {
-												"timeout": "0.12:00:00",
-												"retry": 0,
-												"retryIntervalInSeconds": 30,
-												"secureOutput": false,
-												"secureInput": false
-											},
-											"userProperties": [],
-											"typeProperties": {
-												"source": {
-													"type": "SnowflakeSource",
-													"query": "SELECT CALL_ID, QUESTION, RESPONSE, ADDITIONAL_INFO FROM INGEST.RAW_TACTICAL_EDGEWELL",
-													"exportSettings": {
-														"type": "SnowflakeExportCopyCommand"
-													}
-												},
-												"sink": {
-													"type": "SnowflakeSink",
-													"importSettings": {
-														"type": "SnowflakeImportCopyCommand"
-													}
-												},
-												"enableStaging": true,
-												"stagingSettings": {
-													"linkedServiceName": {
-														"referenceName": "ls_blob_dev_wlad",
-														"type": "LinkedServiceReference"
-													}
-												},
-												"translator": {
-													"value": "@variables('Column Mapping String Helper')",
-													"type": "Expression"
-												}
-											},
-											"inputs": [
-												{
-													"referenceName": "TargetTable",
-													"type": "DatasetReference",
-													"parameters": {
-														"TableName": "RAW_TACTICAL_EDGEWELL",
-														"SchemaName": "INGEST"
-													}
-												}
-											],
-											"outputs": [
-												{
-													"referenceName": "TargetTable",
-													"type": "DatasetReference",
-													"parameters": {
-														"TableName": "RAW_TACTICAL_EDGEWELL_TRIMMED_QUESTIONS",
-														"SchemaName": "INGEST"
-													}
-												}
-											]
-										},
-										{
-											"name": "Script1",
-											"type": "Script",
-											"dependsOn": [],
-											"policy": {
-												"timeout": "0.12:00:00",
-												"retry": 0,
-												"retryIntervalInSeconds": 30,
-												"secureOutput": false,
-												"secureInput": false
-											},
-											"userProperties": [],
-											"linkedServiceName": {
-												"referenceName": "ls_sf_dev_wlad",
-												"type": "LinkedServiceReference"
-											},
-											"typeProperties": {
-												"scripts": [
-													{
-														"type": "Query",
-														"text": "INSERT INTO INGEST.RAW_TACTICAL_EDGEWELL_TRIMMED(ID,DATE,SKU_ID ,SKU_DESCRIPTION ,SKU_CODE ,SKU_EAN ,CLIENT,SUB_CALL ,RETAILER,STORE_ID ,STORE_DESCRIPTION ,CALL_DATE,CALL_ID) \nSELECT ID,DATE,SKU_ID ,SKU_DESCRIPTION ,SKU_CODE ,SKU_EAN ,CLIENT,SUB_CALL ,RETAILER,STORE_ID ,STORE_DESCRIPTION ,CALL_DATE,CALL_ID FROM INGEST.RAW_TACTICAL_EDGEWELL\n"
-													}
-												],
-												"scriptBlockExecutionTimeout": "02:00:00"
-											}
-										},
-										{
-											"name": "Script2",
-											"type": "Script",
-											"dependsOn": [
-												{
-													"activity": "Script1",
-													"dependencyConditions": [
-														"Succeeded"
-													]
-												}
-											],
-											"policy": {
-												"timeout": "0.12:00:00",
-												"retry": 0,
-												"retryIntervalInSeconds": 30,
-												"secureOutput": false,
-												"secureInput": false
-											},
-											"userProperties": [],
-											"linkedServiceName": {
-												"referenceName": "ls_sf_dev_wlad",
-												"type": "LinkedServiceReference"
-											},
-											"typeProperties": {
-												"scripts": [
-													{
-														"type": "Query",
-														"text": "INSERT INTO INGEST.RAW_TACTICAL_EDGEWELL_TRIMMED_QUESTIONS(CALL_ID, QUESTION, RESPONSE, ADDITIONAL_INFO) \nSELECT CALL_ID, QUESTION, RESPONSE, ADDITIONAL_INFO FROM INGEST.RAW_TACTICAL_EDGEWELL;\n"
-													}
-												],
-												"scriptBlockExecutionTimeout": "02:00:00"
-											}
-										}
-									]
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"parameters": {
-					"DataWarehouseName": {
-						"type": "string",
-						"defaultValue": "Edgewell"
-					},
-					"Slot": {
-						"type": "string",
-						"defaultValue": "dev"
-					}
-				},
-				"variables": {
-					"JSON_Properties": {
-						"type": "Array"
-					},
-					"JSON_Properties_String": {
-						"type": "String"
-					},
-					"Number_of_JSON_Properties": {
-						"type": "Integer"
-					},
-					"Current_Property": {
-						"type": "Integer"
-					},
-					"Column_Mapping_String": {
-						"type": "String"
-					},
-					"Column Mapping String Helper": {
-						"type": "String"
-					},
-					"Current_Property_Helper": {
-						"type": "Integer"
-					},
-					"Helper_String": {
-						"type": "String"
-					},
-					"ReadyColumnMapping": {
-						"type": "String"
-					}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-01-16T17:14:02Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/TargetTable')]"
 			]
 		}
 	]
