@@ -3137,7 +3137,7 @@
 								"datasetParameters": {
 									"source1": {
 										"FileName": {
-											"value": "@pipeline().parameters.Filename",
+											"value": "@string(pipeline().parameters.Filename)",
 											"type": "Expression"
 										},
 										"KVSasUrl": {
@@ -3147,7 +3147,7 @@
 									},
 									"sink1": {
 										"FileName": {
-											"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+											"value": "@string(concat('delimiter_', pipeline().parameters.Filename))",
 											"type": "Expression"
 										},
 										"KVSasUrl": {
@@ -3197,7 +3197,7 @@
 								"datasetParameters": {
 									"source1": {
 										"FileName": {
-											"value": "@pipeline().parameters.Filename",
+											"value": "@string(pipeline().parameters.Filename)",
 											"type": "Expression"
 										},
 										"KVSasUrl": {
@@ -3207,7 +3207,7 @@
 									},
 									"sink1": {
 										"FileName": {
-											"value": "@concat('headers_', pipeline().parameters.Filename)",
+											"value": "@string(concat('headers_', pipeline().parameters.Filename))",
 											"type": "Expression"
 										},
 										"KVSasUrl": {
