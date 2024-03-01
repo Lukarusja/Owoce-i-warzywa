@@ -1005,7 +1005,7 @@
 					}
 				},
 				"folder": {
-					"name": "API Management"
+					"name": "Auto CSV Processing"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -1045,7 +1045,7 @@
 					}
 				},
 				"folder": {
-					"name": "API Management"
+					"name": "Auto CSV Processing"
 				},
 				"annotations": [],
 				"type": "DelimitedText",

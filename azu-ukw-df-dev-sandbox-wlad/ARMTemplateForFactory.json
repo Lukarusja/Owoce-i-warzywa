@@ -3107,6 +3107,843 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ETL Generic Copy CSV')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Find CSV Delimiter",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "findCSVDelimiter",
+								"type": "DataFlowReference",
+								"parameters": {
+									"fileName": {
+										"value": "'@{pipeline().parameters.Filename}'",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"source1": {
+										"FileName": {
+											"value": "@pipeline().parameters.Filename",
+											"type": "Expression"
+										},
+										"KVSasUrl": {
+											"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+											"type": "Expression"
+										}
+									},
+									"sink1": {
+										"FileName": {
+											"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+											"type": "Expression"
+										},
+										"KVSasUrl": {
+											"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+											"type": "Expression"
+										}
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Find CSV Skip Count",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Find CSV Delimiter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "findCSVHeaders",
+								"type": "DataFlowReference",
+								"parameters": {
+									"fileName": {
+										"value": "'@{pipeline().parameters.Filename}'",
+										"type": "Expression"
+									}
+								},
+								"datasetParameters": {
+									"source1": {
+										"FileName": {
+											"value": "@pipeline().parameters.Filename",
+											"type": "Expression"
+										},
+										"KVSasUrl": {
+											"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+											"type": "Expression"
+										}
+									},
+									"sink1": {
+										"FileName": {
+											"value": "@concat('headers_', pipeline().parameters.Filename)",
+											"type": "Expression"
+										},
+										"KVSasUrl": {
+											"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+											"type": "Expression"
+										}
+									}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "Lookup CSV Delimiter",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Find CSV Skip Count",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "SourceBlobCSV_split",
+								"type": "DatasetReference",
+								"parameters": {
+									"FileName": {
+										"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+										"type": "Expression"
+									},
+									"KVSasUrl": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					{
+						"name": "Set Delimiter",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup CSV Delimiter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "delimiter",
+							"value": {
+								"value": "@split(activity('Lookup CSV Delimiter').output.value, ':')[1]",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Lookup CSV SkipLineCount",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "Set Delimiter",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"dataset": {
+								"referenceName": "SourceBlobCSV_split",
+								"type": "DatasetReference",
+								"parameters": {
+									"FileName": {
+										"value": "@concat('headers_', pipeline().parameters.Filename)",
+										"type": "Expression"
+									},
+									"KVSasUrl": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					{
+						"name": "Set SkipLineCount",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup CSV SkipLineCount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "SkipLineCount",
+							"value": {
+								"value": "@activity('Find CSV Skip Count').output.value",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Move File to Processed",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Update Log",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "BinarySource",
+								"storeSettings": {
+									"type": "AzureFileStorageReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": "Import/InProcess",
+									"wildcardFileName": {
+										"value": "@pipeline().parameters.Filename",
+										"type": "Expression"
+									},
+									"deleteFilesAfterCompletion": true
+								},
+								"formatSettings": {
+									"type": "BinaryReadSettings"
+								}
+							},
+							"sink": {
+								"type": "BinarySink",
+								"storeSettings": {
+									"type": "AzureFileStorageWriteSettings",
+									"copyBehavior": "PreserveHierarchy"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "DiffRG_FileMover",
+								"type": "DatasetReference",
+								"parameters": {
+									"InOrOut": "InProcess",
+									"StorageAccountName": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+										"type": "Expression"
+									},
+									"FileShare": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+										"type": "Expression"
+									},
+									"KVStorageAccKey": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DiffRG_FileMover",
+								"type": "DatasetReference",
+								"parameters": {
+									"InOrOut": "Processed",
+									"StorageAccountName": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+										"type": "Expression"
+									},
+									"FileShare": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+										"type": "Expression"
+									},
+									"KVStorageAccKey": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Create Initial Log",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Set SkipLineCount",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "DiffRG ETL Create Logs",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"local_file": {
+									"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
+									"type": "Expression"
+								},
+								"tenant_code": {
+									"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+									"type": "Expression"
+								},
+								"slot": {
+									"value": "@pipeline().parameters.Slot",
+									"type": "Expression"
+								},
+								"datasource": {
+									"value": "@split(pipeline().parameters.Filename, '_')[1]",
+									"type": "Expression"
+								},
+								"dest_schema": "INGEST",
+								"attr": "{}",
+								"status": "Loading",
+								"cfg": {
+									"value": "@pipeline().parameters.cfg",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Copy data from Source to Ingest",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Create Initial Log",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureFileStorageReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": "Import/InProcess",
+									"wildcardFileName": {
+										"value": "@pipeline().parameters.Filename",
+										"type": "Expression"
+									},
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings",
+									"skipLineCount": {
+										"value": "@variables('SkipLineCount')",
+										"type": "Expression"
+									}
+								}
+							},
+							"sink": {
+								"type": "SnowflakeSink",
+								"importSettings": {
+									"type": "SnowflakeImportCopyCommand"
+								}
+							},
+							"enableStaging": true,
+							"stagingSettings": {
+								"linkedServiceName": {
+									"referenceName": "ls_blob_dev_split_wlad",
+									"type": "LinkedServiceReference",
+									"parameters": {
+										"KVSasUrl": {
+											"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+											"type": "Expression"
+										}
+									}
+								},
+								"path": "stagingjson"
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "Generic_SourceFileCSV",
+								"type": "DatasetReference",
+								"parameters": {
+									"StorageAccountName": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+										"type": "Expression"
+									},
+									"FileShare": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+										"type": "Expression"
+									},
+									"KVStorageAccKey": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+										"type": "Expression"
+									},
+									"FileName": {
+										"value": "@pipeline().parameters.Filename",
+										"type": "Expression"
+									},
+									"Delimiter": {
+										"value": "@variables('delimiter')",
+										"type": "Expression"
+									},
+									"SkipCount": {
+										"value": "@variables('SkipLineCount')",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DiffRG_TargetTable",
+								"type": "DatasetReference",
+								"parameters": {
+									"TableName": {
+										"value": "@json(pipeline().parameters.cfg).datastore.tablename_csv_js",
+										"type": "Expression"
+									},
+									"SchemaName": {
+										"value": "@json(pipeline().parameters.cfg).datastore.schema",
+										"type": "Expression"
+									},
+									"DatawarehouseName": {
+										"value": "@json(pipeline().parameters.cfg).datastore.database",
+										"type": "Expression"
+									},
+									"AccountName": {
+										"value": "@json(pipeline().parameters.cfg).datastore.account",
+										"type": "Expression"
+									},
+									"Username": {
+										"value": "@json(pipeline().parameters.cfg).datastore.username",
+										"type": "Expression"
+									},
+									"Database": {
+										"value": "@json(pipeline().parameters.cfg).datastore.database",
+										"type": "Expression"
+									},
+									"Warehouse": {
+										"value": "@json(pipeline().parameters.cfg).datastore.warehouse",
+										"type": "Expression"
+									},
+									"Password": {
+										"value": "@json(pipeline().parameters.cfg).datastore.password_kv",
+										"type": "Expression"
+									},
+									"Role": {
+										"value": "@json(pipeline().parameters.cfg).datastore.role",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Update Log",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Copy data from Source to Ingest",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "DiffRG ETL Create Logs",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"local_file": {
+									"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
+									"type": "Expression"
+								},
+								"tenant_code": {
+									"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+									"type": "Expression"
+								},
+								"slot": {
+									"value": "@pipeline().parameters.Slot",
+									"type": "Expression"
+								},
+								"datasource": "tesco",
+								"uuid": {
+									"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
+									"type": "Expression"
+								},
+								"dest_table": {
+									"value": "@if(startswith(pipeline().parameters.Filename, 'tactical'),json(pipeline().parameters.cfg).datastore.tablename_tactical , json(pipeline().parameters.cfg).datastore.tablename_reports )",
+									"type": "Expression"
+								},
+								"dest_schema": "INGESTION",
+								"attr": "{}",
+								"status": "OK",
+								"rows_read": {
+									"value": "@activity('Copy data from Source to Ingest').output.rowsRead",
+									"type": "Expression"
+								},
+								"rows_copied": {
+									"value": "@activity('Copy data from Source to Ingest').output.rowsCopied",
+									"type": "Expression"
+								},
+								"cfg": {
+									"value": "@pipeline().parameters.cfg",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Update Log Fail",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Copy data from Source to Ingest",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "DiffRG ETL Create Logs",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"local_file": {
+									"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
+									"type": "Expression"
+								},
+								"tenant_code": {
+									"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+									"type": "Expression"
+								},
+								"slot": {
+									"value": "@pipeline().parameters.Slot",
+									"type": "Expression"
+								},
+								"datasource": "tesco",
+								"uuid": {
+									"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
+									"type": "Expression"
+								},
+								"dest_table": {
+									"value": "@if(startswith(pipeline().parameters.Filename, 'tactical'),json(pipeline().parameters.cfg).datastore.tablename_tactical , json(pipeline().parameters.cfg).datastore.tablename_reports )",
+									"type": "Expression"
+								},
+								"dest_schema": {
+									"value": "@json(pipeline().parameters.cfg).datastore.schema",
+									"type": "Expression"
+								},
+								"attr": "{}",
+								"status": "FAILED",
+								"rows_read": {
+									"value": "@activity('Copy data from Source to Ingest').output.rowsRead",
+									"type": "Expression"
+								},
+								"rows_copied": {
+									"value": "@activity('Copy data from Source to Ingest').output.rowsCopied",
+									"type": "Expression"
+								},
+								"cfg": {
+									"value": "@pipeline().parameters.cfg",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Copy Fail",
+						"type": "Fail",
+						"dependsOn": [
+							{
+								"activity": "Update Log Fail",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"message": "567",
+							"errorCode": "Failed to copy data from Source to Ingest"
+						}
+					},
+					{
+						"name": "Delete Delimiter File",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Move File to Processed",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "SourceBlobCSV_split",
+								"type": "DatasetReference",
+								"parameters": {
+									"FileName": {
+										"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+										"type": "Expression"
+									},
+									"KVSasUrl": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+										"type": "Expression"
+									}
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "Delete SkipLineCount File",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "Delete Delimiter File",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "SourceBlobCSV_split",
+								"type": "DatasetReference",
+								"parameters": {
+									"FileName": {
+										"value": "@concat('headers_', pipeline().parameters.Filename)",
+										"type": "Expression"
+									},
+									"KVSasUrl": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+										"type": "Expression"
+									}
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Edgewell"
+					},
+					"Filename": {
+						"type": "string",
+						"defaultValue": "tactical-edgewell"
+					},
+					"Slot": {
+						"type": "string",
+						"defaultValue": "dev"
+					},
+					"cfg": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"JSON_Properties": {
+						"type": "Array"
+					},
+					"JSON_Properties_String": {
+						"type": "String"
+					},
+					"Number_of_JSON_Properties": {
+						"type": "Integer"
+					},
+					"Current_Property": {
+						"type": "Integer"
+					},
+					"Column_Mapping_String": {
+						"type": "String"
+					},
+					"Column Mapping String Helper": {
+						"type": "String"
+					},
+					"Current_Property_Helper": {
+						"type": "Integer"
+					},
+					"Helper_String": {
+						"type": "String"
+					},
+					"ReadyColumnMapping": {
+						"type": "String"
+					},
+					"cfg": {
+						"type": "String"
+					},
+					"delimiter": {
+						"type": "String"
+					},
+					"SkipLineCount": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Auto CSV Processing"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-16T17:14:02Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/findCSVDelimiter')]",
+				"[concat(variables('factoryId'), '/dataflows/findCSVHeaders')]",
+				"[concat(variables('factoryId'), '/datasets/SourceBlobCSV_split')]",
+				"[concat(variables('factoryId'), '/datasets/DiffRG_FileMover')]",
+				"[concat(variables('factoryId'), '/pipelines/DiffRG ETL Create Logs')]",
+				"[concat(variables('factoryId'), '/datasets/Generic_SourceFileCSV')]",
+				"[concat(variables('factoryId'), '/datasets/DiffRG_TargetTable')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_split_wlad')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ETL Generic Copy JSON')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -3558,6 +4395,249 @@
 				"[concat(variables('factoryId'), '/datasets/SourceFileJSON')]",
 				"[concat(variables('factoryId'), '/datasets/TargetTable')]",
 				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ETL Generic Extract CSV Two Step')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "Set Variable Cfg",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "FileMover",
+								"type": "DatasetReference",
+								"parameters": {
+									"DataWarehouseName": "Edgewell",
+									"InOrOut": "InProcess"
+								}
+							},
+							"fieldList": [
+								"itemName",
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureFileStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Filter Filename",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata').output.childItems",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@equals(item().type,'File')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "ForEach File",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Filter Filename",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Filter Filename').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Execute Pipeline Copy JSON",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"policy": {
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "ETL Generic Copy CSV",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"DataWarehouseName": {
+												"value": "@pipeline().parameters.DataWarehouseName",
+												"type": "Expression"
+											},
+											"Filename": {
+												"value": "@item().name",
+												"type": "Expression"
+											},
+											"Slot": {
+												"value": "@pipeline().parameters.Slot",
+												"type": "Expression"
+											},
+											"cfg": {
+												"value": "@variables('cfg')",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Set Variable Cfg",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Get Cfg",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "cfg",
+							"value": {
+								"value": "@activity('Get Cfg').output.value",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Get Cfg",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"method": "GET",
+							"headers": {},
+							"url": {
+								"value": "@concat('https://az-ukw-ac-dev-wlad.azconfig.io/kv/', pipeline().parameters.DataWarehouseName, '_', pipeline().parameters.Slot)",
+								"type": "Expression"
+							},
+							"authentication": {
+								"type": "MSI",
+								"resource": "https://az-ukw-ac-dev-wlad.azconfig.io"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Edgewell"
+					},
+					"FilenamePattern": {
+						"type": "string",
+						"defaultValue": "tactical-edgewell"
+					},
+					"Slot": {
+						"type": "string",
+						"defaultValue": "dev"
+					}
+				},
+				"variables": {
+					"JSON_Properties": {
+						"type": "Array"
+					},
+					"JSON_Properties_String": {
+						"type": "String"
+					},
+					"Number_of_JSON_Properties": {
+						"type": "Integer"
+					},
+					"Current_Property": {
+						"type": "Integer"
+					},
+					"Column_Mapping_String": {
+						"type": "String"
+					},
+					"Column Mapping String Helper": {
+						"type": "String"
+					},
+					"Current_Property_Helper": {
+						"type": "Integer"
+					},
+					"Helper_String": {
+						"type": "String"
+					},
+					"ReadyColumnMapping": {
+						"type": "String"
+					},
+					"cfg": {
+						"type": "String"
+					},
+					"delimiter": {
+						"type": "String"
+					},
+					"SkipLineCount": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Auto CSV Processing"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-15T17:00:11Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/FileMover')]",
+				"[concat(variables('factoryId'), '/pipelines/ETL Generic Copy CSV')]"
 			]
 		},
 		{
@@ -9125,6 +10205,81 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Generic_SourceFileCSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_file_dev_split_wlad",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"StorageAccountName": {
+							"value": "@dataset().StorageAccountName",
+							"type": "Expression"
+						},
+						"FileShare": {
+							"value": "@dataset().FileShare",
+							"type": "Expression"
+						},
+						"KVStorageAccKey": {
+							"value": "@dataset().KVStorageAccKey",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"StorageAccountName": {
+						"type": "string",
+						"defaultValue": "azuukwstdevsandboxwlad"
+					},
+					"FileShare": {
+						"type": "string",
+						"defaultValue": "stfs-sandbox-dev-wlad"
+					},
+					"KVStorageAccKey": {
+						"type": "string",
+						"defaultValue": "sa-access-key-edgewell"
+					},
+					"FileName": {
+						"type": "string",
+						"defaultValue": "dummy.csv"
+					},
+					"Delimiter": {
+						"type": "string"
+					},
+					"SkipCount": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Auto CSV Processing"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureFileStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"folderPath": "Import/InProcess"
+					},
+					"columnDelimiter": {
+						"value": "@dataset().Delimiter",
+						"type": "Expression"
+					},
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_file_dev_split_wlad')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/KraftHeinzAPITest_Dataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -9218,7 +10373,7 @@
 					}
 				},
 				"folder": {
-					"name": "API Management"
+					"name": "Auto CSV Processing"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -9258,7 +10413,7 @@
 					}
 				},
 				"folder": {
-					"name": "API Management"
+					"name": "Auto CSV Processing"
 				},
 				"annotations": [],
 				"type": "DelimitedText",
@@ -9280,6 +10435,104 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceBlobCSVNoDelimiter_split')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_split_wlad",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"KVSasUrl": {
+							"value": "@dataset().KVSasUrl",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"FileName": {
+						"type": "string",
+						"defaultValue": "Heinz Select App Data Sample.csv"
+					},
+					"KVSasUrl": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Auto CSV Processing"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"container": "staging"
+					},
+					"columnDelimiter": "",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_split_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceBlobCSV_split')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_dev_split_wlad",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"KVSasUrl": {
+							"value": "@dataset().KVSasUrl",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"FileName": {
+						"type": "string",
+						"defaultValue": "Heinz Select App Data Sample.csv"
+					},
+					"KVSasUrl": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "Auto CSV Processing"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"container": "staing"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_split_wlad')]"
 			]
 		},
 		{
@@ -9311,6 +10564,138 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_blob_dev_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceFileCSV')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_file_dev_split_wlad",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"StorageAccountName": {
+							"value": "@dataset().StorageAccountName",
+							"type": "Expression"
+						},
+						"FileShare": {
+							"value": "@dataset().FileShare",
+							"type": "Expression"
+						},
+						"KVStorageAccKey": {
+							"value": "@dataset().KVStorageAccKey",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"StorageAccountName": {
+						"type": "string",
+						"defaultValue": "azuukwstdevsandboxwlad"
+					},
+					"FileShare": {
+						"type": "string",
+						"defaultValue": "stfs-sandbox-dev-wlad"
+					},
+					"KVStorageAccKey": {
+						"type": "string",
+						"defaultValue": "sa-access-key-edgewell"
+					},
+					"FileName": {
+						"type": "string",
+						"defaultValue": "dummy.csv"
+					}
+				},
+				"folder": {
+					"name": "Auto CSV Processing"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureFileStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"folderPath": "Import/InProcess"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_file_dev_split_wlad')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/SourceFileCSVNoDelimiter')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_file_dev_split_wlad",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"StorageAccountName": {
+							"value": "@dataset().StorageAccountName",
+							"type": "Expression"
+						},
+						"FileShare": {
+							"value": "@dataset().FileShare",
+							"type": "Expression"
+						},
+						"KVStorageAccKey": {
+							"value": "@dataset().StorageAccountName",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"StorageAccountName": {
+						"type": "string",
+						"defaultValue": "azuukwstdevsandboxwlad"
+					},
+					"FileShare": {
+						"type": "string",
+						"defaultValue": "stfs-sandbox-dev-wlad"
+					},
+					"KVStorageAccKey": {
+						"type": "string",
+						"defaultValue": "sa-access-key-edgewell"
+					},
+					"FileName": {
+						"type": "string",
+						"defaultValue": "dummy.csv"
+					}
+				},
+				"folder": {
+					"name": "Auto CSV Processing"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureFileStorageLocation",
+						"fileName": {
+							"value": "@dataset().FileName",
+							"type": "Expression"
+						},
+						"folderPath": "Import/InProcess"
+					},
+					"columnDelimiter": "",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_file_dev_split_wlad')]"
 			]
 		},
 		{
@@ -10023,7 +11408,7 @@
 					"sources": [
 						{
 							"dataset": {
-								"referenceName": "SourceBlobCSVNoDelimiter",
+								"referenceName": "SourceBlobCSVNoDelimiter_split",
 								"type": "DatasetReference"
 							},
 							"name": "source1"
@@ -10032,7 +11417,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "SourceBlobCSV",
+								"referenceName": "SourceBlobCSV_split",
 								"type": "DatasetReference"
 							},
 							"name": "sink1"
@@ -10068,17 +11453,19 @@
 						"source1 derive({_col0_} = toString(byName('_col0_'))) ~> derivedColumn2",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     partitionFileNames:[(concat('delimiter_', $fileName))],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
 						"     mapColumn(",
 						"          delimeter",
-						"     )) ~> sink1"
+						"     ),",
+						"     partitionBy('hash', 1)) ~> sink1"
 					]
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/SourceBlobCSVNoDelimiter')]",
-				"[concat(variables('factoryId'), '/datasets/SourceBlobCSV')]"
+				"[concat(variables('factoryId'), '/datasets/SourceBlobCSVNoDelimiter_split')]",
+				"[concat(variables('factoryId'), '/datasets/SourceBlobCSV_split')]"
 			]
 		},
 		{
@@ -10091,7 +11478,7 @@
 					"sources": [
 						{
 							"dataset": {
-								"referenceName": "SourceBlobCSVNoDelimiter",
+								"referenceName": "SourceBlobCSVNoDelimiter_split",
 								"type": "DatasetReference"
 							},
 							"name": "source1"
@@ -10100,7 +11487,7 @@
 					"sinks": [
 						{
 							"dataset": {
-								"referenceName": "SourceBlobCSV",
+								"referenceName": "SourceBlobCSV_split",
 								"type": "DatasetReference"
 							},
 							"name": "sink1"
@@ -10134,14 +11521,16 @@
 						"derivedColumn1 aggregate(column1 = minIf(datalines!=0,datalines)) ~> aggregate1",
 						"aggregate1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
+						"     partitionFileNames:[(concat('headers_', $fileName))],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> sink1"
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> sink1"
 					]
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/SourceBlobCSVNoDelimiter')]",
-				"[concat(variables('factoryId'), '/datasets/SourceBlobCSV')]"
+				"[concat(variables('factoryId'), '/datasets/SourceBlobCSVNoDelimiter_split')]",
+				"[concat(variables('factoryId'), '/datasets/SourceBlobCSV_split')]"
 			]
 		},
 		{
