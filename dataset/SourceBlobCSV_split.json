@@ -32,7 +32,7 @@
 					"value": "@dataset().FileName",
 					"type": "Expression"
 				},
-				"container": "staing"
+				"container": "staging"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
