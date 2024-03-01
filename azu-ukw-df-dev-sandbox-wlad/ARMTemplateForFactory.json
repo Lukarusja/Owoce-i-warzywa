@@ -11468,6 +11468,7 @@
 						"     partitionFileNames:[(toString(concat('delimiter_', $fileName)))],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
+						"     quoteAll: true,",
 						"     mapColumn(",
 						"          delimeter",
 						"     ),",
@@ -11536,6 +11537,7 @@
 						"     partitionFileNames:[(toString(concat('headers_', $fileName)))],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
+						"     quoteAll: true,",
 						"     partitionBy('hash', 1)) ~> sink1"
 					]
 				}
