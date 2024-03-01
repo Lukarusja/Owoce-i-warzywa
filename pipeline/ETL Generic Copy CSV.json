@@ -3,354 +3,6 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Move File to Processed",
-				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "Switch",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "BinarySource",
-						"storeSettings": {
-							"type": "AzureFileStorageReadSettings",
-							"recursive": true,
-							"wildcardFolderPath": {
-								"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/')",
-								"type": "Expression"
-							},
-							"wildcardFileName": {
-								"value": "@pipeline().parameters.Filename",
-								"type": "Expression"
-							},
-							"deleteFilesAfterCompletion": true
-						},
-						"formatSettings": {
-							"type": "BinaryReadSettings"
-						}
-					},
-					"sink": {
-						"type": "BinarySink",
-						"storeSettings": {
-							"type": "AzureFileStorageWriteSettings",
-							"copyBehavior": "PreserveHierarchy"
-						}
-					},
-					"enableStaging": false
-				},
-				"inputs": [
-					{
-						"referenceName": "FileMover",
-						"type": "DatasetReference",
-						"parameters": {
-							"DataWarehouseName": {
-								"value": "@pipeline().parameters.DataWarehouseName",
-								"type": "Expression"
-							},
-							"InOrOut": "InProcess"
-						}
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "FileMover",
-						"type": "DatasetReference",
-						"parameters": {
-							"DataWarehouseName": {
-								"value": "@pipeline().parameters.DataWarehouseName",
-								"type": "Expression"
-							},
-							"InOrOut": "Processed"
-						}
-					}
-				]
-			},
-			{
-				"name": "Switch",
-				"type": "Switch",
-				"dependsOn": [
-					{
-						"activity": "Create Initial Log",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"on": {
-						"value": "@pipeline().parameters.DataWarehouseName",
-						"type": "Expression"
-					},
-					"cases": [
-						{
-							"value": "Edgewell",
-							"activities": [
-								{
-									"name": "Copy data from Source to Ingest",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "JsonSource",
-											"storeSettings": {
-												"type": "AzureFileStorageReadSettings",
-												"recursive": true,
-												"wildcardFolderPath": {
-													"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/')",
-													"type": "Expression"
-												},
-												"wildcardFileName": {
-													"value": "@pipeline().parameters.Filename",
-													"type": "Expression"
-												},
-												"enablePartitionDiscovery": false
-											},
-											"formatSettings": {
-												"type": "JsonReadSettings"
-											}
-										},
-										"sink": {
-											"type": "SnowflakeSink",
-											"importSettings": {
-												"type": "SnowflakeImportCopyCommand"
-											}
-										},
-										"enableStaging": true,
-										"stagingSettings": {
-											"linkedServiceName": {
-												"referenceName": "ls_blob_dev_wlad",
-												"type": "LinkedServiceReference"
-											},
-											"path": "stagingjson"
-										},
-										"translator": {
-											"value": "@activity('Execute Pipeline Generate Column Mapping').output.pipelineReturnValue.ColumnMappingString",
-											"type": "Expression"
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "SourceFileJSON",
-											"type": "DatasetReference"
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "TargetTable",
-											"type": "DatasetReference",
-											"parameters": {
-												"TableName": {
-													"value": "@if(startswith(pipeline().parameters.Filename, 'tactical'),'RAW_TACTICAL_EDGEWELL' , 'RAW_EDGEWELL_REPORTS' )",
-													"type": "Expression"
-												},
-												"SchemaName": "INGEST",
-												"DatawarehouseName": "INTERNAL_DEV_WLAD"
-											}
-										}
-									]
-								},
-								{
-									"name": "Update Log",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "Copy data from Source to Ingest",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "ETL Create Logs",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"local_file": {
-												"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
-												"type": "Expression"
-											},
-											"tenant_code": {
-												"value": "@toLower(pipeline().parameters.DataWarehouseName)",
-												"type": "Expression"
-											},
-											"slot": {
-												"value": "@pipeline().parameters.Slot",
-												"type": "Expression"
-											},
-											"datasource": "tesco",
-											"uuid": {
-												"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
-												"type": "Expression"
-											},
-											"dest_table": "RAW_TACTICAL_EDGEWELL",
-											"dest_schema": "INGEST",
-											"attr": "{}",
-											"status": {
-												"value": "@activity('Copy data from Source to Ingest').output.executionDetails[0].status",
-												"type": "Expression"
-											},
-											"rows_read": {
-												"value": "@activity('Copy data from Source to Ingest').output.rowsRead",
-												"type": "Expression"
-											},
-											"rows_copied": {
-												"value": "@activity('Copy data from Source to Ingest').output.rowsCopied",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								{
-									"name": "Update Log Fail",
-									"type": "ExecutePipeline",
-									"dependsOn": [
-										{
-											"activity": "Copy data from Source to Ingest",
-											"dependencyConditions": [
-												"Failed"
-											]
-										}
-									],
-									"policy": {
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"pipeline": {
-											"referenceName": "ETL Create Logs",
-											"type": "PipelineReference"
-										},
-										"waitOnCompletion": true,
-										"parameters": {
-											"local_file": {
-												"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
-												"type": "Expression"
-											},
-											"tenant_code": {
-												"value": "@toLower(pipeline().parameters.DataWarehouseName)",
-												"type": "Expression"
-											},
-											"slot": {
-												"value": "@pipeline().parameters.Slot",
-												"type": "Expression"
-											},
-											"datasource": "tesco",
-											"uuid": {
-												"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
-												"type": "Expression"
-											},
-											"dest_table": "RAW_TACTICAL_EDGEWELL",
-											"dest_schema": "INGEST",
-											"attr": "{}",
-											"status": {
-												"value": "@activity('Copy data from Source to Ingest').output.executionDetails[0].status",
-												"type": "Expression"
-											},
-											"rows_read": {
-												"value": "@activity('Copy data from Source to Ingest').output.rowsRead",
-												"type": "Expression"
-											},
-											"rows_copied": {
-												"value": "@activity('Copy data from Source to Ingest').output.rowsCopied",
-												"type": "Expression"
-											}
-										}
-									}
-								},
-								{
-									"name": "Copy Fail",
-									"type": "Fail",
-									"dependsOn": [
-										{
-											"activity": "Update Log Fail",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"message": "567",
-										"errorCode": "Failed to copy data from Source to Ingest"
-									}
-								}
-							]
-						}
-					]
-				}
-			},
-			{
-				"name": "Fail",
-				"type": "Fail",
-				"dependsOn": [],
-				"userProperties": [],
-				"typeProperties": {
-					"message": "Failed to connect to Storage Account or File Does Not Exist",
-					"errorCode": "556"
-				}
-			},
-			{
-				"name": "Create Initial Log",
-				"type": "ExecutePipeline",
-				"dependsOn": [],
-				"policy": {
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "ETL Create Logs",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true,
-					"parameters": {
-						"local_file": {
-							"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
-							"type": "Expression"
-						},
-						"tenant_code": {
-							"value": "@toLower(pipeline().parameters.DataWarehouseName)",
-							"type": "Expression"
-						},
-						"slot": {
-							"value": "@pipeline().parameters.Slot",
-							"type": "Expression"
-						},
-						"datasource": "tesco",
-						"dest_schema": "INGEST",
-						"attr": "{}",
-						"status": "Loading"
-					}
-				}
-			},
-			{
 				"name": "Find CSV Delimiter",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
@@ -374,15 +26,81 @@
 						},
 						"datasetParameters": {
 							"source1": {
+								"StorageAccountName": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+									"type": "Expression"
+								},
+								"FileShare": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+									"type": "Expression"
+								},
+								"KVStorageAccKey": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+									"type": "Expression"
+								},
 								"FileName": {
 									"value": "@pipeline().parameters.Filename",
 									"type": "Expression"
 								}
 							},
 							"sink1": {
+								"StorageAccountName": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+									"type": "Expression"
+								},
+								"FileShare": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+									"type": "Expression"
+								},
+								"KVStorageAccKey": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+									"type": "Expression"
+								},
 								"FileName": {
 									"value": "@concat('delimiter_', pipeline().parameters.Filename)",
 									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceParameters": {
+							"source1": {
+								"schemaLinkedService": {
+									"StorageAccountName": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+										"type": "Expression"
+									},
+									"FileShare": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+										"type": "Expression"
+									},
+									"KVStorageAccKey": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+										"type": "Expression"
+									},
+									"FileName": {
+										"value": "@pipeline().parameters.Filename",
+										"type": "Expression"
+									}
+								}
+							},
+							"sink1": {
+								"schemaLinkedService": {
+									"StorageAccountName": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+										"type": "Expression"
+									},
+									"FileShare": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+										"type": "Expression"
+									},
+									"KVStorageAccKey": {
+										"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+										"type": "Expression"
+									},
+									"FileName": {
+										"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+										"type": "Expression"
+									}
 								}
 							}
 						}
@@ -425,12 +143,36 @@
 						},
 						"datasetParameters": {
 							"source1": {
+								"StorageAccountName": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+									"type": "Expression"
+								},
+								"FileShare": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+									"type": "Expression"
+								},
+								"KVStorageAccKey": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+									"type": "Expression"
+								},
 								"FileName": {
 									"value": "@pipeline().parameters.Filename",
 									"type": "Expression"
 								}
 							},
 							"sink1": {
+								"StorageAccountName": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+									"type": "Expression"
+								},
+								"FileShare": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+									"type": "Expression"
+								},
+								"KVStorageAccKey": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+									"type": "Expression"
+								},
 								"FileName": {
 									"value": "@concat('headers_', pipeline().parameters.Filename)",
 									"type": "Expression"
@@ -463,7 +205,665 @@
 					"secureOutput": false,
 					"secureInput": false
 				},
-				"userProperties": []
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureFileStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "SourceFileCSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"StorageAccountName": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			},
+			{
+				"name": "Set Delimiter",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Lookup CSV Delimiter",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "delimiter",
+					"value": {
+						"value": "@split(activity('Lookup CSV Delimiter').output.value, ':')[1]",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Lookup CSV SkipLineCount",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Set Delimiter",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureFileStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "SourceFileCSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"StorageAccountName": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "@concat('headers_', pipeline().parameters.Filename)",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			},
+			{
+				"name": "Set SkipLineCount",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Lookup CSV SkipLineCount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "SkipLineCount",
+					"value": {
+						"value": "@activity('Find CSV Skip Count').output.value",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Move File to Processed",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Update Log",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureFileStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "Import/InProcess",
+							"wildcardFileName": {
+								"value": "@pipeline().parameters.Filename",
+								"type": "Expression"
+							},
+							"deleteFilesAfterCompletion": true
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureFileStorageWriteSettings",
+							"copyBehavior": "PreserveHierarchy"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "DiffRG_FileMover",
+						"type": "DatasetReference",
+						"parameters": {
+							"InOrOut": "InProcess",
+							"StorageAccountName": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DiffRG_FileMover",
+						"type": "DatasetReference",
+						"parameters": {
+							"InOrOut": "Processed",
+							"StorageAccountName": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Create Initial Log",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Set SkipLineCount",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DiffRG ETL Create Logs",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"local_file": {
+							"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
+							"type": "Expression"
+						},
+						"tenant_code": {
+							"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+							"type": "Expression"
+						},
+						"slot": {
+							"value": "@pipeline().parameters.Slot",
+							"type": "Expression"
+						},
+						"datasource": {
+							"value": "@split(pipeline().parameters.Filename, '_')[1]",
+							"type": "Expression"
+						},
+						"dest_schema": "INGEST",
+						"attr": "{}",
+						"status": "Loading",
+						"cfg": {
+							"value": "@pipeline().parameters.cfg",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Copy data from Source to Ingest",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Create Initial Log",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureFileStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": "Import/InProcess",
+							"wildcardFileName": {
+								"value": "@pipeline().parameters.Filename",
+								"type": "Expression"
+							},
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings",
+							"skipLineCount": {
+								"value": "@variables('SkipLineCount')",
+								"type": "Expression"
+							}
+						}
+					},
+					"sink": {
+						"type": "SnowflakeSink",
+						"importSettings": {
+							"type": "SnowflakeImportCopyCommand"
+						}
+					},
+					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "ls_blob_dev_split_wlad",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"KVSasUrl": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+									"type": "Expression"
+								}
+							}
+						},
+						"path": "stagingjson"
+					},
+					"translator": {
+						"value": "@activity('Execute Pipeline Generate Column Mapping').output.pipelineReturnValue.ColumnMappingString",
+						"type": "Expression"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "Generic_SourceFileCSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"StorageAccountName": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "@pipeline().parameters.Filename",
+								"type": "Expression"
+							},
+							"Delimiter": {
+								"value": "@variables('delimiter')",
+								"type": "Expression"
+							},
+							"SkipCount": {
+								"value": "@variables('SkipLineCount')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DiffRG_TargetTable",
+						"type": "DatasetReference",
+						"parameters": {
+							"TableName": {
+								"value": "@json(pipeline().parameters.cfg).datastore.tablename_csv_js",
+								"type": "Expression"
+							},
+							"SchemaName": {
+								"value": "@json(pipeline().parameters.cfg).datastore.schema",
+								"type": "Expression"
+							},
+							"DatawarehouseName": {
+								"value": "@json(pipeline().parameters.cfg).datastore.database",
+								"type": "Expression"
+							},
+							"AccountName": {
+								"value": "@json(pipeline().parameters.cfg).datastore.account",
+								"type": "Expression"
+							},
+							"Username": {
+								"value": "@json(pipeline().parameters.cfg).datastore.username",
+								"type": "Expression"
+							},
+							"Database": {
+								"value": "@json(pipeline().parameters.cfg).datastore.database",
+								"type": "Expression"
+							},
+							"Warehouse": {
+								"value": "@json(pipeline().parameters.cfg).datastore.warehouse",
+								"type": "Expression"
+							},
+							"Password": {
+								"value": "@json(pipeline().parameters.cfg).datastore.password_kv",
+								"type": "Expression"
+							},
+							"Role": {
+								"value": "@json(pipeline().parameters.cfg).datastore.role",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Update Log",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy data from Source to Ingest",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DiffRG ETL Create Logs",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"local_file": {
+							"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
+							"type": "Expression"
+						},
+						"tenant_code": {
+							"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+							"type": "Expression"
+						},
+						"slot": {
+							"value": "@pipeline().parameters.Slot",
+							"type": "Expression"
+						},
+						"datasource": "tesco",
+						"uuid": {
+							"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
+							"type": "Expression"
+						},
+						"dest_table": {
+							"value": "@if(startswith(pipeline().parameters.Filename, 'tactical'),json(pipeline().parameters.cfg).datastore.tablename_tactical , json(pipeline().parameters.cfg).datastore.tablename_reports )",
+							"type": "Expression"
+						},
+						"dest_schema": "INGESTION",
+						"attr": "{}",
+						"status": "OK",
+						"rows_read": {
+							"value": "@activity('Copy data from Source to Ingest').output.rowsRead",
+							"type": "Expression"
+						},
+						"rows_copied": {
+							"value": "@activity('Copy data from Source to Ingest').output.rowsCopied",
+							"type": "Expression"
+						},
+						"cfg": {
+							"value": "@pipeline().parameters.cfg",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Update Log Fail",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Copy data from Source to Ingest",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "DiffRG ETL Create Logs",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"local_file": {
+							"value": "@concat('Import/',pipeline().parameters.DataWarehouseName,'/InProcess/', pipeline().parameters.Filename)",
+							"type": "Expression"
+						},
+						"tenant_code": {
+							"value": "@toLower(pipeline().parameters.DataWarehouseName)",
+							"type": "Expression"
+						},
+						"slot": {
+							"value": "@pipeline().parameters.Slot",
+							"type": "Expression"
+						},
+						"datasource": "tesco",
+						"uuid": {
+							"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
+							"type": "Expression"
+						},
+						"dest_table": {
+							"value": "@if(startswith(pipeline().parameters.Filename, 'tactical'),json(pipeline().parameters.cfg).datastore.tablename_tactical , json(pipeline().parameters.cfg).datastore.tablename_reports )",
+							"type": "Expression"
+						},
+						"dest_schema": {
+							"value": "@json(pipeline().parameters.cfg).datastore.schema",
+							"type": "Expression"
+						},
+						"attr": "{}",
+						"status": "FAILED",
+						"rows_read": {
+							"value": "@activity('Copy data from Source to Ingest').output.rowsRead",
+							"type": "Expression"
+						},
+						"rows_copied": {
+							"value": "@activity('Copy data from Source to Ingest').output.rowsCopied",
+							"type": "Expression"
+						},
+						"cfg": {
+							"value": "@pipeline().parameters.cfg",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Copy Fail",
+				"type": "Fail",
+				"dependsOn": [
+					{
+						"activity": "Update Log Fail",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"message": "567",
+					"errorCode": "Failed to copy data from Source to Ingest"
+				}
+			},
+			{
+				"name": "Delete Delimiter File",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "Move File to Processed",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "SourceFileCSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"StorageAccountName": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": true,
+					"storeSettings": {
+						"type": "AzureFileStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "Delete SkipLineCount File",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "Delete Delimiter File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "SourceFileCSV",
+						"type": "DatasetReference",
+						"parameters": {
+							"StorageAccountName": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+								"type": "Expression"
+							},
+							"FileShare": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+								"type": "Expression"
+							},
+							"KVStorageAccKey": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+								"type": "Expression"
+							},
+							"FileName": {
+								"value": "@concat('headers_', pipeline().parameters.Filename)",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": true,
+					"storeSettings": {
+						"type": "AzureFileStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
 			}
 		],
 		"parameters": {
@@ -478,6 +878,9 @@
 			"Slot": {
 				"type": "string",
 				"defaultValue": "dev"
+			},
+			"cfg": {
+				"type": "string"
 			}
 		},
 		"variables": {
@@ -506,6 +909,15 @@
 				"type": "String"
 			},
 			"ReadyColumnMapping": {
+				"type": "String"
+			},
+			"cfg": {
+				"type": "String"
+			},
+			"delimiter": {
+				"type": "String"
+			},
+			"SkipLineCount": {
 				"type": "String"
 			}
 		},

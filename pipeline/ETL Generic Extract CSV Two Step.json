@@ -5,7 +5,14 @@
 			{
 				"name": "Get Metadata",
 				"type": "GetMetadata",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Set Variable Cfg",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -89,7 +96,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "ETL Generic Copy JSON",
+									"referenceName": "ETL Generic Copy CSV",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
@@ -105,11 +112,63 @@
 									"Slot": {
 										"value": "@pipeline().parameters.Slot",
 										"type": "Expression"
+									},
+									"cfg": {
+										"value": "@variables('cfg')",
+										"type": "Expression"
 									}
 								}
 							}
 						}
 					]
+				}
+			},
+			{
+				"name": "Set Variable Cfg",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Get Cfg",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "cfg",
+					"value": {
+						"value": "@activity('Get Cfg').output.value",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Get Cfg",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"url": {
+						"value": "@concat('https://az-ukw-ac-dev-wlad.azconfig.io/kv/', pipeline().parameters.DataWarehouseName, '_', pipeline().parameters.Slot)",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://az-ukw-ac-dev-wlad.azconfig.io"
+					}
 				}
 			}
 		],
@@ -153,6 +212,15 @@
 				"type": "String"
 			},
 			"ReadyColumnMapping": {
+				"type": "String"
+			},
+			"cfg": {
+				"type": "String"
+			},
+			"delimiter": {
+				"type": "String"
+			},
+			"SkipLineCount": {
 				"type": "String"
 			}
 		},

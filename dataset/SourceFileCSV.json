@@ -1,0 +1,61 @@
+{
+	"name": "SourceFileCSV",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_file_dev_split_wlad",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"StorageAccountName": {
+					"value": "@dataset().StorageAccountName",
+					"type": "Expression"
+				},
+				"FileShare": {
+					"value": "@dataset().FileShare",
+					"type": "Expression"
+				},
+				"KVStorageAccKey": {
+					"value": "@dataset().KVStorageAccKey",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"StorageAccountName": {
+				"type": "string",
+				"defaultValue": "azuukwstdevsandboxwlad"
+			},
+			"FileShare": {
+				"type": "string",
+				"defaultValue": "stfs-sandbox-dev-wlad"
+			},
+			"KVStorageAccKey": {
+				"type": "string",
+				"defaultValue": "sa-access-key-edgewell"
+			},
+			"FileName": {
+				"type": "string",
+				"defaultValue": "dummy.csv"
+			}
+		},
+		"folder": {
+			"name": "Auto CSV Processing"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureFileStorageLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
+				"folderPath": "Import/InProcess"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}

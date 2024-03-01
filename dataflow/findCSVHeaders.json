@@ -6,7 +6,7 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "SourceBlobCSVNoDelimiter",
+						"referenceName": "SourceFileCSVNoDelimiter",
 						"type": "DatasetReference"
 					},
 					"name": "source1"
@@ -15,7 +15,7 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "SourceBlobCSV",
+						"referenceName": "SourceFileCSV",
 						"type": "DatasetReference"
 					},
 					"name": "sink1"
