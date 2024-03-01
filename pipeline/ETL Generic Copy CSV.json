@@ -122,7 +122,7 @@
 				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "Find CSV Skip Count",
+						"activity": "Execute Pipeline Generate Column Mapping",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -421,7 +421,7 @@
 						"type": "DelimitedTextSource",
 						"additionalColumns": [
 							{
-								"name": "ELT_UUID",
+								"name": "DummyNameForETLUUID",
 								"value": {
 									"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
 									"type": "Expression"
@@ -465,6 +465,10 @@
 							}
 						},
 						"path": "stagingjson"
+					},
+					"translator": {
+						"value": "@json(activity('Execute Pipeline Generate Column Mapping').output.pipelineReturnValue.ColumnMappingString)",
+						"type": "Expression"
 					}
 				},
 				"inputs": [
@@ -771,6 +775,55 @@
 						"type": "AzureBlobStorageReadSettings",
 						"recursive": true,
 						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "Execute Pipeline Generate Column Mapping",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Find CSV Skip Count",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "ETL Generic Generate Column Mapping CSV",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"DataWarehouseName": {
+							"value": "@pipeline().parameters.DataWarehouseName",
+							"type": "Expression"
+						},
+						"FilenamePattern": {
+							"value": "@pipeline().parameters.Filename",
+							"type": "Expression"
+						},
+						"StorageAccountName": {
+							"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+							"type": "Expression"
+						},
+						"FileShare": {
+							"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+							"type": "Expression"
+						},
+						"KVStorageAccKey": {
+							"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+							"type": "Expression"
+						},
+						"cfg": {
+							"value": "@pipeline().parameters.cfg",
+							"type": "Expression"
+						}
 					}
 				}
 			}
