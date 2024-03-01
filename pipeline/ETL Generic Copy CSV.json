@@ -5,6 +5,8 @@
 			{
 				"name": "Find CSV Delimiter",
 				"type": "ExecuteDataFlow",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -57,6 +59,8 @@
 			{
 				"name": "Find CSV Skip Count",
 				"type": "ExecuteDataFlow",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Find CSV Delimiter",
@@ -96,7 +100,7 @@
 							},
 							"sink1": {
 								"FileName": {
-									"value": "@string(concat('headers_', pipeline().parameters.Filename))",
+									"value": "@string(pipeline().parameters.Filename)",
 									"type": "Expression"
 								},
 								"KVSasUrl": {
