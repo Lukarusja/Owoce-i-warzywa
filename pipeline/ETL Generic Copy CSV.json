@@ -153,7 +153,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"FileName": {
-								"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+								"value": "@concat('delimiter_', replace(pipeline().parameters.Filename, '.csv', '.txt'))",
 								"type": "Expression"
 							},
 							"KVSasUrl": {
@@ -183,7 +183,7 @@
 				"typeProperties": {
 					"variableName": "delimiter",
 					"value": {
-						"value": "@split(activity('Lookup CSV Delimiter').output.firstRow.delimiter, ':')[1]",
+						"value": "@split(activity('Lookup CSV Delimiter').output.firstRow.Prop_0, ':')[1]",
 						"type": "Expression"
 					}
 				}
@@ -224,7 +224,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"FileName": {
-								"value": "@concat('headers_', pipeline().parameters.Filename)",
+								"value": "@concat('headers_', replace(pipeline().parameters.Filename, '.csv', '.txt'))",
 								"type": "Expression"
 							},
 							"KVSasUrl": {
@@ -254,7 +254,7 @@
 				"typeProperties": {
 					"variableName": "SkipLineCount",
 					"value": {
-						"value": "@activity('Find CSV Skip Count').output.firstRow.column1",
+						"value": "@activity('Lookup CSV SkipLineCount').output.firstRow.Prop_0",
 						"type": "Expression"
 					}
 				}
@@ -262,6 +262,8 @@
 			{
 				"name": "Move File to Processed",
 				"type": "Copy",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Update Log",
@@ -417,6 +419,15 @@
 				"typeProperties": {
 					"source": {
 						"type": "DelimitedTextSource",
+						"additionalColumns": [
+							{
+								"name": "ELT_UUID",
+								"value": {
+									"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
+									"type": "Expression"
+								}
+							}
+						],
 						"storeSettings": {
 							"type": "AzureFileStorageReadSettings",
 							"recursive": true,
@@ -430,7 +441,7 @@
 						"formatSettings": {
 							"type": "DelimitedTextReadSettings",
 							"skipLineCount": {
-								"value": "@variables('SkipLineCount')",
+								"value": "@sub(int(variables('SkipLineCount')),1)",
 								"type": "Expression"
 							}
 						}
@@ -678,6 +689,8 @@
 			{
 				"name": "Delete Delimiter File",
 				"type": "Delete",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Move File to Processed",
@@ -700,7 +713,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"FileName": {
-								"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+								"value": "@concat('delimiter_', replace(pipeline().parameters.Filename, '.csv', '.txt'))",
 								"type": "Expression"
 							},
 							"KVSasUrl": {
@@ -720,6 +733,8 @@
 			{
 				"name": "Delete SkipLineCount File",
 				"type": "Delete",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Delete Delimiter File",
@@ -742,7 +757,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"FileName": {
-								"value": "@concat('headers_', pipeline().parameters.Filename)",
+								"value": "@concat('headers_', replace(pipeline().parameters.Filename, '.csv', '.txt'))",
 								"type": "Expression"
 							},
 							"KVSasUrl": {

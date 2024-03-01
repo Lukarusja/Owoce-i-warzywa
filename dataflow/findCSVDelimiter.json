@@ -56,7 +56,7 @@
 				"source1 derive({_col0_} = toString(byName('_col0_'))) ~> derivedColumn2",
 				"derivedColumn1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     partitionFileNames:[(toString(concat('delimiter_', $fileName)))],",
+				"     partitionFileNames:[(toString(concat('delimiter_', replace($fileName, '.csv', '.txt'))))],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     quoteAll: true,",

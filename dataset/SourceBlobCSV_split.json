@@ -34,9 +34,12 @@
 				},
 				"container": "staging"
 			},
-			"columnDelimiter": ",",
+			"columnDelimiter": {
+				"value": "<>",
+				"type": "Expression"
+			},
 			"escapeChar": "\\",
-			"firstRowAsHeader": true,
+			"firstRowAsHeader": false,
 			"quoteChar": "\""
 		},
 		"schema": []
