@@ -11477,7 +11477,7 @@
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
 						"     skipLines: 5,",
-						"     wildcardPaths:[($fileName)]) ~> source1",
+						"     wildcardPaths:[(toString($fileName))]) ~> source1",
 						"derivedColumn2 keyGenerate(output(rownum as long),",
 						"     startAt: 1L,",
 						"     stepValue: 1L) ~> surrogateKey1",
