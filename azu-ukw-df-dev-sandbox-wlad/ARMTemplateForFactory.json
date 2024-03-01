@@ -4404,48 +4404,6 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Get Metadata",
-						"type": "GetMetadata",
-						"dependsOn": [
-							{
-								"activity": "Set Variable Cfg",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "FileMover",
-								"type": "DatasetReference",
-								"parameters": {
-									"DataWarehouseName": "Edgewell",
-									"InOrOut": "InProcess"
-								}
-							},
-							"fieldList": [
-								"itemName",
-								"childItems"
-							],
-							"storeSettings": {
-								"type": "AzureFileStorageReadSettings",
-								"recursive": true,
-								"enablePartitionDiscovery": false
-							},
-							"formatSettings": {
-								"type": "BinaryReadSettings"
-							}
-						}
-					},
-					{
 						"name": "Filter Filename",
 						"type": "Filter",
 						"dependsOn": [
@@ -4572,6 +4530,59 @@
 								"resource": "https://az-ukw-ac-dev-wlad.azconfig.io"
 							}
 						}
+					},
+					{
+						"name": "Get Metadata",
+						"type": "GetMetadata",
+						"dependsOn": [
+							{
+								"activity": "Set Variable Cfg",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "DiffRG_FileMover",
+								"type": "DatasetReference",
+								"parameters": {
+									"InOrOut": "InProcess",
+									"StorageAccountName": {
+										"value": "@json(variables('cfg')).storageaccount.name",
+										"type": "Expression"
+									},
+									"FileShare": {
+										"value": "@json(variables('cfg')).storageaccount.fileshare",
+										"type": "Expression"
+									},
+									"KVStorageAccKey": {
+										"value": "@json(variables('cfg')).storageaccount.KVStorageAccKey",
+										"type": "Expression"
+									}
+								}
+							},
+							"fieldList": [
+								"itemName",
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureFileStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
 					}
 				],
 				"policy": {
@@ -4636,7 +4647,7 @@
 				"lastPublishTime": "2024-01-15T17:00:11Z"
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/FileMover')]",
+				"[concat(variables('factoryId'), '/datasets/DiffRG_FileMover')]",
 				"[concat(variables('factoryId'), '/pipelines/ETL Generic Copy CSV')]"
 			]
 		},
