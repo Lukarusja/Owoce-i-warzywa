@@ -1736,7 +1736,7 @@
 						"source1 derive({_col0_} = toString(byName('_col0_'))) ~> derivedColumn2",
 						"derivedColumn1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     partitionFileNames:[(concat('delimiter_', $fileName))],",
+						"     partitionFileNames:[(toString(concat('delimiter_', $fileName)))],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
 						"     mapColumn(",
@@ -1801,7 +1801,7 @@
 						"derivedColumn1 aggregate(column1 = minIf(datalines!=0,datalines)) ~> aggregate1",
 						"aggregate1 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     partitionFileNames:[(concat('headers_', $fileName))],",
+						"     partitionFileNames:[(toString(concat('headers_', $fileName)))],",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
 						"     partitionBy('hash', 1)) ~> sink1"
