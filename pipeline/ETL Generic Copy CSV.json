@@ -37,7 +37,7 @@
 							},
 							"sink1": {
 								"FileName": {
-									"value": "@string(concat('delimiter_', pipeline().parameters.Filename))",
+									"value": "@string(pipeline().parameters.Filename)",
 									"type": "Expression"
 								},
 								"KVSasUrl": {
