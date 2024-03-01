@@ -179,7 +179,7 @@
 				"typeProperties": {
 					"variableName": "delimiter",
 					"value": {
-						"value": "@split(activity('Lookup CSV Delimiter').output.value, ':')[1]",
+						"value": "@split(activity('Lookup CSV Delimiter').output.firstRow.delimiter, ':')[1]",
 						"type": "Expression"
 					}
 				}
@@ -250,7 +250,7 @@
 				"typeProperties": {
 					"variableName": "SkipLineCount",
 					"value": {
-						"value": "@activity('Find CSV Skip Count').output.value",
+						"value": "@activity('Find CSV Skip Count').output.firstRow.column1",
 						"type": "Expression"
 					}
 				}

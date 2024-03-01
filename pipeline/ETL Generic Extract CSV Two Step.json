@@ -179,7 +179,7 @@
 			},
 			"FilenamePattern": {
 				"type": "string",
-				"defaultValue": "tactical-edgewell"
+				"defaultValue": "Edgewell_JS"
 			},
 			"Slot": {
 				"type": "string",
