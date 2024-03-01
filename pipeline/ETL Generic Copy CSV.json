@@ -26,81 +26,23 @@
 						},
 						"datasetParameters": {
 							"source1": {
-								"StorageAccountName": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-									"type": "Expression"
-								},
-								"FileShare": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
-									"type": "Expression"
-								},
-								"KVStorageAccKey": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
-									"type": "Expression"
-								},
 								"FileName": {
 									"value": "@pipeline().parameters.Filename",
 									"type": "Expression"
+								},
+								"KVSasUrl": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+									"type": "Expression"
 								}
 							},
 							"sink1": {
-								"StorageAccountName": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-									"type": "Expression"
-								},
-								"FileShare": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
-									"type": "Expression"
-								},
-								"KVStorageAccKey": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
-									"type": "Expression"
-								},
 								"FileName": {
 									"value": "@concat('delimiter_', pipeline().parameters.Filename)",
 									"type": "Expression"
-								}
-							}
-						},
-						"linkedServiceParameters": {
-							"source1": {
-								"schemaLinkedService": {
-									"StorageAccountName": {
-										"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-										"type": "Expression"
-									},
-									"FileShare": {
-										"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
-										"type": "Expression"
-									},
-									"KVStorageAccKey": {
-										"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
-										"type": "Expression"
-									},
-									"FileName": {
-										"value": "@pipeline().parameters.Filename",
-										"type": "Expression"
-									}
-								}
-							},
-							"sink1": {
-								"schemaLinkedService": {
-									"StorageAccountName": {
-										"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-										"type": "Expression"
-									},
-									"FileShare": {
-										"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
-										"type": "Expression"
-									},
-									"KVStorageAccKey": {
-										"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
-										"type": "Expression"
-									},
-									"FileName": {
-										"value": "@concat('delimiter_', pipeline().parameters.Filename)",
-										"type": "Expression"
-									}
+								},
+								"KVSasUrl": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
+									"type": "Expression"
 								}
 							}
 						}
@@ -143,38 +85,22 @@
 						},
 						"datasetParameters": {
 							"source1": {
-								"StorageAccountName": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-									"type": "Expression"
-								},
-								"FileShare": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
-									"type": "Expression"
-								},
-								"KVStorageAccKey": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
-									"type": "Expression"
-								},
 								"FileName": {
 									"value": "@pipeline().parameters.Filename",
+									"type": "Expression"
+								},
+								"KVSasUrl": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
 									"type": "Expression"
 								}
 							},
 							"sink1": {
-								"StorageAccountName": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-									"type": "Expression"
-								},
-								"FileShare": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
-									"type": "Expression"
-								},
-								"KVStorageAccKey": {
-									"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
-									"type": "Expression"
-								},
 								"FileName": {
 									"value": "@concat('headers_', pipeline().parameters.Filename)",
+									"type": "Expression"
+								},
+								"KVSasUrl": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
 									"type": "Expression"
 								}
 							}
@@ -210,7 +136,7 @@
 					"source": {
 						"type": "DelimitedTextSource",
 						"storeSettings": {
-							"type": "AzureFileStorageReadSettings",
+							"type": "AzureBlobStorageReadSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
 						},
@@ -219,23 +145,15 @@
 						}
 					},
 					"dataset": {
-						"referenceName": "SourceFileCSV",
+						"referenceName": "SourceBlobCSV_split",
 						"type": "DatasetReference",
 						"parameters": {
-							"StorageAccountName": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-								"type": "Expression"
-							},
-							"FileShare": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-								"type": "Expression"
-							},
-							"KVStorageAccKey": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-								"type": "Expression"
-							},
 							"FileName": {
 								"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+								"type": "Expression"
+							},
+							"KVSasUrl": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
 								"type": "Expression"
 							}
 						}
@@ -289,7 +207,7 @@
 					"source": {
 						"type": "DelimitedTextSource",
 						"storeSettings": {
-							"type": "AzureFileStorageReadSettings",
+							"type": "AzureBlobStorageReadSettings",
 							"recursive": true,
 							"enablePartitionDiscovery": false
 						},
@@ -298,23 +216,15 @@
 						}
 					},
 					"dataset": {
-						"referenceName": "SourceFileCSV",
+						"referenceName": "SourceBlobCSV_split",
 						"type": "DatasetReference",
 						"parameters": {
-							"StorageAccountName": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-								"type": "Expression"
-							},
-							"FileShare": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-								"type": "Expression"
-							},
-							"KVStorageAccKey": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-								"type": "Expression"
-							},
 							"FileName": {
 								"value": "@concat('headers_', pipeline().parameters.Filename)",
+								"type": "Expression"
+							},
+							"KVSasUrl": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
 								"type": "Expression"
 							}
 						}
@@ -540,10 +450,6 @@
 							}
 						},
 						"path": "stagingjson"
-					},
-					"translator": {
-						"value": "@activity('Execute Pipeline Generate Column Mapping').output.pipelineReturnValue.ColumnMappingString",
-						"type": "Expression"
 					}
 				},
 				"inputs": [
@@ -786,30 +692,22 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "SourceFileCSV",
+						"referenceName": "SourceBlobCSV_split",
 						"type": "DatasetReference",
 						"parameters": {
-							"StorageAccountName": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-								"type": "Expression"
-							},
-							"FileShare": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
-								"type": "Expression"
-							},
-							"KVStorageAccKey": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
-								"type": "Expression"
-							},
 							"FileName": {
 								"value": "@concat('delimiter_', pipeline().parameters.Filename)",
+								"type": "Expression"
+							},
+							"KVSasUrl": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
 								"type": "Expression"
 							}
 						}
 					},
-					"enableLogging": true,
+					"enableLogging": false,
 					"storeSettings": {
-						"type": "AzureFileStorageReadSettings",
+						"type": "AzureBlobStorageReadSettings",
 						"recursive": true,
 						"enablePartitionDiscovery": false
 					}
@@ -836,30 +734,22 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "SourceFileCSV",
+						"referenceName": "SourceBlobCSV_split",
 						"type": "DatasetReference",
 						"parameters": {
-							"StorageAccountName": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.name",
-								"type": "Expression"
-							},
-							"FileShare": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
-								"type": "Expression"
-							},
-							"KVStorageAccKey": {
-								"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
-								"type": "Expression"
-							},
 							"FileName": {
 								"value": "@concat('headers_', pipeline().parameters.Filename)",
+								"type": "Expression"
+							},
+							"KVSasUrl": {
+								"value": "@json(pipeline().parameters.cfg).storageaccount.sas_url_kv_name",
 								"type": "Expression"
 							}
 						}
 					},
-					"enableLogging": true,
+					"enableLogging": false,
 					"storeSettings": {
-						"type": "AzureFileStorageReadSettings",
+						"type": "AzureBlobStorageReadSettings",
 						"recursive": true,
 						"enablePartitionDiscovery": false
 					}

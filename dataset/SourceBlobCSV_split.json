@@ -1,0 +1,45 @@
+{
+	"name": "SourceBlobCSV_split",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blob_dev_split_wlad",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"KVSasUrl": {
+					"value": "@dataset().KVSasUrl",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string",
+				"defaultValue": "Heinz Select App Data Sample.csv"
+			},
+			"KVSasUrl": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Auto CSV Processing"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
+				"container": "staing"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
