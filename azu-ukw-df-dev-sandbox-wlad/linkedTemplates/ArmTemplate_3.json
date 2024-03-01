@@ -1552,6 +1552,295 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ETL Generic Generate Column Mapping CSV')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Failed To Connect",
+						"type": "Fail",
+						"dependsOn": [
+							{
+								"activity": "Lookup JSON",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"message": "Failed to connect to Storage Account",
+							"errorCode": "555"
+						}
+					},
+					{
+						"name": "Lookup JSON",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SnowflakeSource",
+								"query": "select column_name, ordinal_position from information_schema.columns where table_name='EDGEWELL_JS_CSV_WLAD' and column_name <> 'ELT_UUID' order by ordinal_position asc;",
+								"exportSettings": {
+									"type": "SnowflakeExportCopyCommand"
+								}
+							},
+							"dataset": {
+								"referenceName": "DiffRG_TargetTable",
+								"type": "DatasetReference",
+								"parameters": {
+									"TableName": {
+										"value": "@json(pipeline().parameters.cfg).datastore.tablename_csv_js",
+										"type": "Expression"
+									},
+									"SchemaName": {
+										"value": "@json(pipeline().parameters.cfg).datastore.schema",
+										"type": "Expression"
+									},
+									"DatawarehouseName": {
+										"value": "@json(pipeline().parameters.cfg).datastore.warehouse",
+										"type": "Expression"
+									},
+									"AccountName": {
+										"value": "@json(pipeline().parameters.cfg).datastore.account",
+										"type": "Expression"
+									},
+									"Username": {
+										"value": "@json(pipeline().parameters.cfg).datastore.username",
+										"type": "Expression"
+									},
+									"Database": {
+										"value": "@json(pipeline().parameters.cfg).datastore.database",
+										"type": "Expression"
+									},
+									"Warehouse": {
+										"value": "@json(pipeline().parameters.cfg).datastore.warehouse",
+										"type": "Expression"
+									},
+									"Password": {
+										"value": "@json(pipeline().parameters.cfg).datastore.password_kv",
+										"type": "Expression"
+									},
+									"Role": {
+										"value": "@json(pipeline().parameters.cfg).datastore.role",
+										"type": "Expression"
+									}
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "Set Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Lookup JSON",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column_Mapping_String",
+							"value": "{\n  \"type\": \"TabularTranslator\",\n  \"mappings\": ["
+						}
+					},
+					{
+						"name": "Clean Up Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "ForEach Column",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "Column Mapping String Helper",
+							"value": {
+								"value": "@concat(variables('Column_Mapping_String'), '{\"source\": { \"name\": \"DummyNameForETLUUID\" }, \"sink\": {\"name\": \"ELT_UUID\"}}')",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Finalize Column Mapping String",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Clean Up Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "pipelineReturnValue",
+							"value": [
+								{
+									"key": "ColumnMappingString",
+									"value": {
+										"type": "Expression",
+										"content": "@concat(variables('Column Mapping String Helper'), ']}')"
+									}
+								}
+							],
+							"setSystemVariable": true
+						}
+					},
+					{
+						"name": "ForEach Column",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Set Column Mapping String",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup JSON').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Append Column Mapping String_copy1",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Set Column Mapping String Helper_copy1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Column_Mapping_String",
+										"value": {
+											"value": "@variables('Column Mapping String Helper')",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "Set Column Mapping String Helper_copy1",
+									"type": "SetVariable",
+									"dependsOn": [],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "Column Mapping String Helper",
+										"value": {
+											"value": "@concat(variables('Column_Mapping_String'),'{\"source\": {\"ordinal\": ', string(sub(int(item().ORDINAL_POSITION),1)), ', \"type\": \"String\"},\"sink\":{\"name\":\"',item().COLUMN_NAME , '\"}},')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"DataWarehouseName": {
+						"type": "string",
+						"defaultValue": "Edgewell"
+					},
+					"FilenamePattern": {
+						"type": "string",
+						"defaultValue": "tactical-edgewell"
+					},
+					"StorageAccountName": {
+						"type": "string"
+					},
+					"FileShare": {
+						"type": "string"
+					},
+					"KVStorageAccKey": {
+						"type": "string"
+					},
+					"cfg": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"JSON_Properties": {
+						"type": "Array"
+					},
+					"JSON_Properties_String": {
+						"type": "String"
+					},
+					"Number_of_JSON_Properties": {
+						"type": "Integer"
+					},
+					"Current_Property": {
+						"type": "Integer"
+					},
+					"Column_Mapping_String": {
+						"type": "String"
+					},
+					"Column Mapping String Helper": {
+						"type": "String"
+					},
+					"Current_Property_Helper": {
+						"type": "Integer"
+					},
+					"Helper_String": {
+						"type": "String"
+					},
+					"ReadyColumnMapping": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "Auto CSV Processing"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-01-22T18:37:58Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/findDelimiter')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -2519,7 +2808,7 @@
 						"type": "Lookup",
 						"dependsOn": [
 							{
-								"activity": "Find CSV Skip Count",
+								"activity": "Execute Pipeline Generate Column Mapping",
 								"dependencyConditions": [
 									"Succeeded"
 								]
@@ -2818,7 +3107,7 @@
 								"type": "DelimitedTextSource",
 								"additionalColumns": [
 									{
-										"name": "ELT_UUID",
+										"name": "DummyNameForETLUUID",
 										"value": {
 											"value": "@activity('Create Initial Log').output.pipelineReturnValue.uuid",
 											"type": "Expression"
@@ -2862,6 +3151,10 @@
 									}
 								},
 								"path": "stagingjson"
+							},
+							"translator": {
+								"value": "@json(activity('Execute Pipeline Generate Column Mapping').output.pipelineReturnValue.ColumnMappingString)",
+								"type": "Expression"
 							}
 						},
 						"inputs": [
@@ -3170,6 +3463,55 @@
 								"enablePartitionDiscovery": false
 							}
 						}
+					},
+					{
+						"name": "Execute Pipeline Generate Column Mapping",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Find CSV Skip Count",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "ETL Generic Generate Column Mapping CSV",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {
+								"DataWarehouseName": {
+									"value": "@pipeline().parameters.DataWarehouseName",
+									"type": "Expression"
+								},
+								"FilenamePattern": {
+									"value": "@pipeline().parameters.Filename",
+									"type": "Expression"
+								},
+								"StorageAccountName": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.name",
+									"type": "Expression"
+								},
+								"FileShare": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.fileshare",
+									"type": "Expression"
+								},
+								"KVStorageAccKey": {
+									"value": "@json(pipeline().parameters.cfg).storageaccount.KVStorageAccKey",
+									"type": "Expression"
+								},
+								"cfg": {
+									"value": "@pipeline().parameters.cfg",
+									"type": "Expression"
+								}
+							}
+						}
 					}
 				],
 				"policy": {
@@ -3238,7 +3580,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/findCSVDelimiter')]",
-				"[concat(variables('factoryId'), '/dataflows/findCSVHeaders')]"
+				"[concat(variables('factoryId'), '/dataflows/findCSVHeaders')]",
+				"[concat(variables('factoryId'), '/pipelines/ETL Generic Generate Column Mapping CSV')]"
 			]
 		},
 		{
